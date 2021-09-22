@@ -12,6 +12,11 @@ from gsw import f, grav
 
 from oceanpy.netcdf import createNetCDF
 from oceanpy.projections import haversine, rotatexy
+
+__all__ = ['gradient_wind_from_ssh',
+           'qg_from_ssh',
+           ]
+
 # from OceanPy.utilities import contour_length
 
 # TODO: mask if any of the variables is nan
@@ -190,6 +195,20 @@ def interp(var, xx, yy):
 def gradient_wind_from_ssh(input_file, output_file=None, variables=('adt', 'ugos', 'vgos'), group='gradient-wind',
                            dimensions=('time', 'latitude', 'longitude'), smooth=False, transform=None):
 
+    """
+
+    Gradient wind velocities as a function of sea surface height.
+
+    Parameters
+    ----------
+    input_file : netcdf file
+
+    Returns
+    -------
+    gradient_wind_velocities : dict or netcdf file
+
+    """
+
     # load file and variables
     dsin = Dataset(input_file, 'r+')
     if output_file is not None and os.path.isfile(output_file):
@@ -347,6 +366,18 @@ def gradient_wind_from_ssh(input_file, output_file=None, variables=('adt', 'ugos
 
 def qg_from_ssh(input_file, output_file=None, group='quasi-geostrophy',
                 dimensions=('time', 'latitude', 'longitude'), smooth=False, transform=None):
+
+    """
+    Calculate the quasi-geostrophic vorticity terms from gradient wind velocities.
+
+    Parameters
+    ----------
+    input_file : netcdf-file
+
+    Returns
+    -------
+
+    """
 
     # load file and variables
     groups = ['gradient-wind', 'gw']
