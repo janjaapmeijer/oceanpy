@@ -1,7 +1,6 @@
 import os
 from netCDF4 import Dataset, date2num
 import xml.etree.ElementTree as ElementTree
-import OceanPy
 from datetime import datetime
 import numpy as np
 try:

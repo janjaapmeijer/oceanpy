@@ -10,8 +10,8 @@ from scipy.interpolate import griddata, UnivariateSpline
 from stsci.convolve import boxcar
 from gsw import f, grav
 
-from oceanpy.netcdf import createNetCDF
-from oceanpy.projections import haversine, rotatexy
+from .netcdf import createNetCDF
+from .projections import haversine, rotatexy
 
 __all__ = ['gradient_wind_from_ssh',
            'qg_from_ssh',

@@ -11,7 +11,7 @@ import os
 from matplotlib import animation
 # from pylab import *
 from netCDF4 import Dataset
-from OceanPy.colormaps import *
+from .colormaps import *
 # from OpenEarthTools.plot.colormap_vaklodingen import *
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import cm
@@ -117,7 +117,7 @@ def play2D(x, y, z=None, u=None, v=None, interval=100, time=None, mask=None, typ
             ax.clear()
             ax.collections = []
 
-            ax.contourf(x, y, z[i], bounds, cmap=cmap)
+            cax = ax.contourf(x, y, z[i], bounds, cmap=cmap)
             #             cax.set_clim([cmin, cmax])
 
             ct = ax.contour(x, y, z[i], bounds, colors='k')
@@ -126,7 +126,7 @@ def play2D(x, y, z=None, u=None, v=None, interval=100, time=None, mask=None, typ
             ax.clabel(ct)
 
         if type == 'quiver':
-            ax.contourf(x, y, z[i], bounds, cmap=cmap, zorder=-1)
+            cax = ax.contourf(x, y, z[i], bounds, cmap=cmap, zorder=-1)
             qax.set_UVC(u[i], v[i])
 
         try:

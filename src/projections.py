@@ -28,7 +28,7 @@ ETRS89 = pyproj.Proj('+proj=laea +lat_0=52 +lon_0=10 +x_0=4321000 +y_0=3210000 +
 SWE99 = pyproj.Proj("+proj=tmerc +lat_0=0 +lon_0=13.5 +k=1 +x_0=150000 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs")
 # SWEREF99 TM
 SWE99TM = pyproj.Proj('+proj=utm +zone=33 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs')
-OSM = pyproj.Proj('+ellps=WGS84 +proj=tmerc +lat_0=0 +lon_0=015d48.377m +k=1.0000056 +x_0=1500064.1 +y_0=-668.0')
+# OSM = pyproj.Proj('+ellps=WGS84 +proj=tmerc +lat_0=0 +lon_0=015d48.377m +k=1.0000056 +x_0=1500064.1 +y_0=-668.0')
 
 UTM54 = pyproj.Proj('+proj=utm +zone=54F +south +ellps=WGS84 +datum=WGS84 +units=m +no_defs')
 
