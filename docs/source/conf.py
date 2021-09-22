@@ -24,8 +24,8 @@ author = 'Jan Jaap Meijer'
 # The full version, including alpha/beta/rc tags
 release = 'tbd'
 
-
 # -- General configuration ---------------------------------------------------
+root_doc = 'index'
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
