@@ -9,7 +9,7 @@ Satellite observations
   \kappa\left|{\bf u}\right|^2 + f\left|{\bf u}\right| = f\left|{\bf u_g}\right|
 ..
 
-.. automodule:: oceanpy.src.kinematics
+.. automodule:: oceanpy.obs.satellite
    :members:
 
 Conductivity Temperature Depth (CTD) observations
