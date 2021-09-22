@@ -196,7 +196,6 @@ def gradient_wind_from_ssh(input_file, output_file=None, variables=('adt', 'ugos
                            dimensions=('time', 'latitude', 'longitude'), smooth=False, transform=None):
 
     """
-
     Gradient wind velocities as a function of sea surface height.
 
     Parameters
