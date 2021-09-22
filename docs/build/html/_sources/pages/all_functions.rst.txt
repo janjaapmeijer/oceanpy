@@ -1,0 +1,7 @@
+All functions
+=============
+
+.. automodule:: oceanpy
+   :members:
+   :undoc-members:
+   :show-inheritance:

@@ -14,7 +14,6 @@ Welcome to OceanPy's documentation!
    pages/observations
    pages/models
 
-
 Indices and tables
 ==================
 
