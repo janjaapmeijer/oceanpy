@@ -14,7 +14,7 @@
 # from . import remote
 # from . import grid
 # from . import polynomials
-from OceanPy.netcdf import *
+# from .netcdf import *
 
 __author__ = 'Jan Jaap Meijer'
 __email__ = 'janjaapmeijer@gmail.com'
