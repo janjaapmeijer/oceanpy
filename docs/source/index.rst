@@ -10,6 +10,9 @@ Welcome to OceanPy's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+installation
+observations
+models
 
 
 Indices and tables
