@@ -10,9 +10,13 @@ Welcome to OceanPy's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+   getting_started
+   pages/observations
+   pages/models
+
+
 Indices and tables
 ==================
 
 * :ref:`genindex`
-* :ref:`modindex`
 * :ref:`search`
