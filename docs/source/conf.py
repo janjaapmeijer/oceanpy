@@ -12,7 +12,7 @@
 #
 import os
 import sys
-sys.path.insert(0, os.path.abspath('.'))
+sys.path.insert(0, os.path.abspath('../../oceanpy'))
 
 # -- Project information -----------------------------------------------------
 
@@ -20,6 +20,8 @@ project = 'OceanPy'
 copyright = '2021, Jan Jaap Meijer'
 author = 'Jan Jaap Meijer'
 
+# The short X.Y version
+version = '0.1'
 # The full version, including alpha/beta/rc tags
 release = 'tbd'
 
