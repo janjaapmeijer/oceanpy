@@ -45,3 +45,5 @@ def contour_length(xr_ds, contour, var=None, timemean=True, time_sel=slice(None,
     cl = np.sum(np.sqrt(dx**2 + dy**2))
 
     return cl, x_ct, y_ct, field
+
+# class Contour(object):

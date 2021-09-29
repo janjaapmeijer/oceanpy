@@ -1,0 +1,4 @@
+name: oceanpy-env
+
+dependencies:
+  - python=3.6
