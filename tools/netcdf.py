@@ -8,6 +8,8 @@ try:
 except ImportError:
     from urllib import urlopen
 
+__all__ = ['createNetCDF']
+
 class createNetCDF(object):
 
     def __init__(self, output_file):

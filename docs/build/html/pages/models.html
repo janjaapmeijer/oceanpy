@@ -28,6 +28,9 @@
         <div class="wy-side-nav-search" >
             <a href="../index.html" class="icon icon-home"> OceanPy
           </a>
+              <div class="version">
+                0.1
+              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
@@ -41,6 +44,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting Started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="observations.html">Observations</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Models</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-oceanpy.models.meteorology">Meteorology</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#general-circulation-models-gcm">General Circulation models (GCM)</a></li>
 </ul>
 </li>
@@ -72,6 +76,16 @@
              
   <section id="models">
 <h1>Models<a class="headerlink" href="#models" title="Permalink to this headline"></a></h1>
+<section id="module-oceanpy.models.meteorology">
+<span id="meteorology"></span><h2>Meteorology<a class="headerlink" href="#module-oceanpy.models.meteorology" title="Permalink to this headline"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="oceanpy.models.meteorology.wind_profile_power_law">
+<span class="sig-prename descclassname"><span class="pre">oceanpy.models.meteorology.</span></span><span class="sig-name descname"><span class="pre">wind_profile_power_law</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u_ref</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z_ref</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.14285714285714285</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oceanpy.models.meteorology.wind_profile_power_law" title="Permalink to this definition"></a></dt>
+<dd><p>wind_profile_power_law returns the wind speed at a requested height,
+relative to the known wind speed at a reference height</p>
+</dd></dl>
+
+</section>
 <section id="general-circulation-models-gcm">
 <h2>General Circulation models (GCM)<a class="headerlink" href="#general-circulation-models-gcm" title="Permalink to this headline"></a></h2>
 </section>
