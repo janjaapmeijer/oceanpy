@@ -11,8 +11,8 @@ Welcome to OceanPy's documentation!
    :caption: Contents:
 
    getting_started
-   pages/observations
-   pages/models
+   observations
+   models
 
 Indices and tables
 ==================
