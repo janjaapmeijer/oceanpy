@@ -5,7 +5,7 @@ Models
 Meteorology
 -----------
 
-.. automodule:: models.meteorology
+.. automodule:: oceanpy.models.meteorology
    :members:
 
 General Circulation models (GCM)
