@@ -1,6 +1,6 @@
 import os
 
-import pyproj
+# import pyproj
 import numpy as np
 
 from netCDF4 import Dataset, num2date
