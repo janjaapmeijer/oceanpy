@@ -8,8 +8,8 @@ from scipy.interpolate import griddata, UnivariateSpline
 from stsci.convolve import boxcar
 from gsw import f, grav
 
-from . import createNetCDF
-from . import haversine, rotatexy
+# from . import createNetCDF
+# from . import haversine, rotatexy
 
 __all__ = ['gradient_wind_from_ssh',
            'qg_from_ssh',

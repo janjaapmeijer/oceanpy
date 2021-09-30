@@ -1,4 +1,4 @@
-#__all__ = ['folder1', 'folder2'] # for folders within OceanPy
+# __all__ = ['models', 'obs', 'tools'] # for folders within OceanPy
 
 # from . import colormaps
 # from . import extreme_value_analysis
@@ -15,6 +15,11 @@
 # from . import grid
 # from . import polynomials
 # from .netcdf import *
+
+from .models import *
+from .obs import *
+# from .plot import *
+from .stats import *
 from .tools import *
 
 __author__ = 'Jan Jaap Meijer'
