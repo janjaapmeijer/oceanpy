@@ -1,10 +1,11 @@
 name: oceanpy-env
 
+channels:
+    - conda-forge
+    - stsci
+
 dependencies:
   - python=3.6
-  - pip:
-    - stsci.convolve
-    - gsw
   - xarray
   - numpy
   - pyproj
