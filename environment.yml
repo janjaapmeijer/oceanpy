@@ -14,5 +14,4 @@ dependencies:
   - pyproj
   - netCDF4
   - scipy
-  - stsci.convolve
   - gsw
