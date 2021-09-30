@@ -190,19 +190,39 @@ def interp(var, xx, yy):
         var = griddata(points[finite], values[finite], points).reshape(xx.shape)
     return var
 
-def gradient_wind_from_ssh(input_file, output_file=None, variables=('adt', 'ugos', 'vgos'), group='gradient-wind',
-                           dimensions=('time', 'latitude', 'longitude'), smooth=False, transform=None):
+def gradient_wind_from_ssh(input_file, variables=None, dimensions=None,
+                           transform=None, smooth=False, output_file=None, group=None):
 
     """
     Gradient wind velocities as a function of sea surface height.
 
     Parameters
     ----------
-    input_file : netcdf file
+    input_file : str, Path, file-like, DataArray or Dataset
+        Netcdf filename, DataArray or Dataset
+    output_file : str, Path or file-like, optional
+        Netcdf filename and path
+    variables : tuple
+        Names of the sea level and geostrophic velocities in the netcdf file or Dataset.
+    group : str, optional
+        Path to the netCDF4 group in the given file.
 
     Returns
     -------
-    gradient_wind_velocities : dict or netcdf file
+    gradient_wind_velocities : dict, file-like
+        Dataset or netcdf file
+
+    Examples
+    --------
+
+    >>> gradient_wind_from_ssh(
+    ...     input_file,
+    ...     variables=('adt', 'ugos', 'vgos'),
+    ...     dimensions=('time', 'latitude', 'longitude'),
+    ...     transform=pyproj.Proj('+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs'),
+    ...     smooth=True,
+    ...     output_file='gw-vel.nc', group='gradient-wind'
+    ... )
 
     """
 
