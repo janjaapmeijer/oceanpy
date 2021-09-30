@@ -2,7 +2,9 @@ name: oceanpy-env
 
 dependencies:
   - python=3.6
-  - pip
+  - pip:
+    - stsci.convolve
+    - gsw
   - xarray
   - numpy
   - pyproj
