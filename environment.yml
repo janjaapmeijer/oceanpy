@@ -1,8 +1,8 @@
 name: oceanpy-env
 
 channels:
-    - conda-forge
-    # - http://ssb.stsci.edu/astroconda
+  - conda-forge
+  # - http://ssb.stsci.edu/astroconda
 
 dependencies:
   - python=3.6
