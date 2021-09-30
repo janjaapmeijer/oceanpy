@@ -6,3 +6,5 @@ dependencies:
   - sphinx_rtd_theme
   - xarray
   - numpy
+  - pyproj
+  - netCDF4
