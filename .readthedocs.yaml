@@ -18,6 +18,7 @@ python:
    version: 3.6
    install:
      - method: pip
+       path: .
      - requirements: docs/source/requirements.txt
 
 # Packages required for scripts
