@@ -2,6 +2,7 @@ name: oceanpy-env
 
 channels:
     - conda-forge
+    - http://ssb.stsci.edu/astroconda
 
 dependencies:
   - python=3.6
@@ -11,3 +12,4 @@ dependencies:
   - netCDF4
   - scipy
   - gsw
+  - stsci.convolve
