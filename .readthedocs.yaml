@@ -17,8 +17,9 @@ formats:
 python:
    version: 3.6
    install:
-   - requirements: docs/source/requirements.txt
+     - method: pip
+     - requirements: docs/source/requirements.txt
 
-# Packages required for scripts 
+# Packages required for scripts
 conda:
   environment: environment.yml

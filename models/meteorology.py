@@ -1,5 +1,3 @@
-import numpy
-
 def wind_profile_power_law(u_ref, z_ref, z=10, alpha=1/7):
     '''
     wind_profile_power_law returns the wind speed at a requested height,

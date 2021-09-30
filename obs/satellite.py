@@ -1,17 +1,15 @@
 import os
 
-# import pyproj
+import pyproj
 import numpy as np
-
 from netCDF4 import Dataset, num2date
-from shutil import copyfile
 
 from scipy.interpolate import griddata, UnivariateSpline
 from stsci.convolve import boxcar
 from gsw import f, grav
 
-from ..tools import createNetCDF
-from ..tools import haversine, rotatexy
+from oceanpy.tools import createNetCDF
+from oceanpy.tools import haversine, rotatexy
 
 __all__ = ['gradient_wind_from_ssh',
            'qg_from_ssh',
