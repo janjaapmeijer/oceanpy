@@ -217,7 +217,7 @@ def gradient_wind_from_ssh(input_file, variables=('adt', 'ugos', 'vgos'),
 
     Returns
     -------
-    gradient_wind_velocities : dict, file-like
+    gradient_wind_velocities : Dataset or file-like
         Dataset or netcdf file
 
     Examples
