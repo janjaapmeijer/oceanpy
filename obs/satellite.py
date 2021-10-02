@@ -2,6 +2,7 @@ import os
 
 import pyproj
 import numpy as np
+import xarray as xr
 from netCDF4 import Dataset, num2date
 
 from scipy.interpolate import griddata, UnivariateSpline
@@ -190,8 +191,9 @@ def interp(var, xx, yy):
         var = griddata(points[finite], values[finite], points).reshape(xx.shape)
     return var
 
-def gradient_wind_from_ssh(input_file, variables=None, dimensions=None,
-                           transform=None, smooth=False, output_file=None, group=None):
+def gradient_wind_from_ssh(input_file, variables=('adt', 'ugos', 'vgos'),
+                            dimensions=('time', 'latitude', 'longitude'), transform=None,
+                            smooth=False, output_file=None, group=None):
 
     """
     Gradient wind velocities as a function of sea surface height.
@@ -226,8 +228,7 @@ def gradient_wind_from_ssh(input_file, variables=None, dimensions=None,
 
     """
 
-    # load file and variables
-    dsin = Dataset(input_file, 'r+')
+    # check if output file exists and otherwise make copy of input file
     if output_file is not None and os.path.isfile(output_file):
         print('Output file %s already exists.' %os.path.basename(output_file))
         dsout = createNetCDF(output_file)
@@ -237,17 +238,33 @@ def gradient_wind_from_ssh(input_file, variables=None, dimensions=None,
               %(os.path.basename(output_file), os.path.basename(input_file)))
         dsout = createNetCDF(output_file)
 
+    # load file and variables
     # take Absolute Dynamic Topography from SSH xarray
-    # adt = xr_ds[variables[0]] if hasattr(xr_ds, variables[0]) else xr_ds.copy()
-    # ugeos = xr_ds[variables[1]].values if hasattr(xr_ds, variables[1]) else None
-    # vgeos = xr_ds[variables[2]].values if hasattr(xr_ds, variables[2]) else None
-    adt = dsin[variables[0]][:] if variables[0] in dsin.variables else dsin.copy()
-    ugeos = dsin[variables[1]][:] if variables[1] in dsin.variables else None
-    vgeos = dsin[variables[2]][:] if variables[2] in dsin.variables else None
+    try:
+        dsin = Dataset(input_file, 'r+')
+    except (OSError, IOError):
+        dsin = input_file.copy()
+    try:
+        adt = dsin[variables[0]][:] if variables[0] in dsin.variables else \
+        print('Variable %s does not exist in %s' % (variables[0], dsin.variables))
+        ugeos = dsin[variables[1]][:] if variables[1] in dsin.variables else None
+        vgeos = dsin[variables[2]][:] if variables[2] in dsin.variables else None
+    except AttributeError:
+        adt, ugeos, vgeos = dsin, None, None
 
     # load dimensions
-    lat = dsin[dimensions[1]][:] if dimensions[1] in dsin.dimensions else None
-    lon = dsin[dimensions[2]][:] if dimensions[2] in dsin.dimensions else None
+    try:
+        lat = dsin[dimensions[1]][:] if dimensions[1] in dsin.dimensions else \
+        print('Dimension %s does not exist in %s' % (dimensions[1], dsin.dimensions))
+        lon = dsin[dimensions[2]][:] if dimensions[2] in dsin.dimensions else \
+        print('Dimension %s does not exist in %s' % (dimensions[2], dsin.dimensions))
+    except AttributeError:
+        lat = dsin[dimensions[1]][:] if dimensions[1] in dsin.dims else \
+        print('Dimension %s does not exist in %s' % (dimensions[1], dsin.dims))
+        lon = dsin[dimensions[2]][:] if dimensions[2] in dsin.dims else \
+        print('Dimension %s does not exist in %s' % (dimensions[2], dsin.dims))
+    else:
+        print('Dimensions %s do not exist.')
 
     # transform polar to cartesian coordinate system
     if transform is not None:
@@ -255,17 +272,17 @@ def gradient_wind_from_ssh(input_file, variables=None, dimensions=None,
         lnln, ltlt = np.meshgrid(lon.data, lat.data)
         xx, yy = pyproj.transform(WGS84, transform, lnln, ltlt)
     else:
-        #TODO: what if ltlt is not defined, it will get stuck at calculating coriolis and gravity
-        xx, yy = np.meshgrid(lon.data, lat.data)
+        lnln, ltlt = np.meshgrid(lon.data, lat.data)
+        Rearth = 6371.e3 # Earth's radius in m
+        xx = Rearth * np.deg2rad(lnln) * np.cos(np.deg2rad(ltlt))
+        yy = Rearth * np.deg2rad(ltlt)
 
     # calculate coriolis force and gravity on grid
     shp = adt.shape
     gravity = grav(ltlt, p=0)
     fcor = f(ltlt)
 
-    # detadx = np.ma.masked_all(shp)
-    # detady = detadx.copy()
-    # d2etadx2, d2etady2, d2etadxdy = detadx.copy(), detadx.copy(), detadx.copy()
+    # calculate curvature (and geostrophic velocities)
     grid_point = (3, 3)
     kappa = np.ma.masked_all(shp)
     geostrophy = (ugeos is None) | (vgeos is None)
@@ -286,66 +303,97 @@ def gradient_wind_from_ssh(input_file, variables=None, dimensions=None,
         d2etadx2 = boxcar(interp(d2etadx2, xx, yy), grid_point) if smooth else d2etadx2
         d2etady2 = boxcar(interp(d2etady2, xx, yy), grid_point) if smooth else d2etady2
 
-        kappa[it,] = (-(d2etadx2*detady**2) -(d2etady2*detadx**2) + (2*d2etadxdy*detadx*detady)) / (detadx**2 + detady**2)**(3/2)
+        # curvature
+        kappa[it,] = (-(d2etadx2*detady**2) -(d2etady2*detadx**2) + (2*d2etadxdy*detadx*detady)) \
+        / (detadx**2 + detady**2)**(3/2)
 
+        # gesostrophic velocities
         if geostrophy:
             ugeos[it,] = -(gravity / fcor) * detady
             vgeos[it,] = (gravity / fcor) * detadx
 
         del detadx, detady, d2etadxdy, d2etadx2, d2etady2
 
+    # calculate vector orientation angle
+    # Note: by definition gradient wind flow is parallel to sea surface height contours
+    try:
+        ugeos, vgeos = ugeos.values, vgeos.values
+    except AttributeError:
+        pass
     xpos = ugeos < 0
     ypos = vgeos < 0
     orientation = np.arctan(vgeos / ugeos)
     orientation[xpos] = np.arctan(vgeos[xpos] / ugeos[xpos]) + np.pi
     orientation[xpos & ypos] = np.arctan(vgeos[xpos & ypos] / ugeos[xpos & ypos]) - np.pi
+
+    # calculate geostrophic speed (magnitude)
     Vgeos = np.sqrt(ugeos**2 + vgeos**2)
 
-    # kappa = (-(d2etadx2*detady**2) -(d2etady2*detadx**2) + (2*d2etadxdy*detadx*detady)) / (detadx**2 + detady**2)**(3/2)
+    # calculate gradient wind speed (magnitude)
+    # according the classification of roots of the gradient wind equation (Holten, 2004)
     if adt.ndim != 2:
         # gravity = np.broadcast_to(gravity, shp)
         fcor = np.broadcast_to(fcor, shp)
-    Rcurv = 1 / kappa
+    Rcurv = 1 / kappa # Radius of curvature
     root = np.sqrt(((fcor**2 * Rcurv**2) / 4) + (fcor * Rcurv * Vgeos))
 
     Vgrad = np.ma.masked_all(shp).flatten()
     fcor, Vgeos, Rcurv, root = fcor.flatten(), Vgeos.flatten(), Rcurv.flatten(), root.flatten()
     for i in range(len(Vgrad)):
-        # Northern Hemisphere
-        if fcor[i] >= 0:
-            if (Rcurv[i] < 0) & (Vgeos[i] > 0):
-                Vgrad[i] = -(fcor[i] * Rcurv[i] / 2) - root[i]
-            elif (Rcurv[i] > 0) & (Vgeos[i] > 0):
-                Vgrad[i] = -(fcor[i] * Rcurv[i] / 2) + root[i]
+        try:
+            if Rcurv[i] == 0:
+                Vgrad[i] = Vgeos.flatten()[i]
             else:
-                Vgrad[i] = np.nan
-        # Southern Hemisphere
-        elif fcor[i] < 0:
-            if (Rcurv[i] < 0) & (Vgeos[i] > 0):
-                Vgrad[i] = -(fcor[i] * Rcurv[i] / 2) + root[i]
-            elif (Rcurv[i] > 0) & (Vgeos[i] > 0):
-                Vgrad[i] = -(fcor[i] * Rcurv[i] / 2) - root[i]
-            else:
-                Vgrad[i] = np.nan
+                # Northern Hemisphere
+                if fcor[i] >= 0:
+                    if (Rcurv[i] < 0) & (Vgeos[i] > 0):
+                        Vgrad[i] = -(fcor[i] * Rcurv[i] / 2) - root[i]
+                    elif (Rcurv[i] > 0) & (Vgeos[i] > 0):
+                        Vgrad[i] = -(fcor[i] * Rcurv[i] / 2) + root[i]
+
+                # Southern Hemisphere
+                elif fcor[i] < 0:
+                    if (Rcurv[i] < 0) & (Vgeos[i] > 0):
+                        Vgrad[i] = -(fcor[i] * Rcurv[i] / 2) + root[i]
+                    elif (Rcurv[i] > 0) & (Vgeos[i] > 0):
+                        Vgrad[i] = -(fcor[i] * Rcurv[i] / 2) - root[i]
+
+        except TypeError:
+            Vgrad[i] = np.nan
 
     data = {}
     data['ugeos'], data['vgeos'], data['ori'] = ugeos, vgeos, orientation
     data['Vgrad'], data['Vgeos'] = Vgrad.reshape(shp), Vgeos.reshape(shp)
-    data['ugrad'], data['vgrad'] = data['Vgrad'] * np.cos(orientation), data['Vgrad'] * np.sin(orientation)
-    # new_variable = {
-    # 'ugeos': ugeos, 'vgeos': vgeos, 'Vgeos': Vgeos,
-    # 'ugrad': ugrad, 'vgrad': vgrad, 'Vgrad': Vgrad
-    # }
+    data['ugrad'] = data['Vgrad'] * np.cos(orientation)
+    data['vgrad'] = data['Vgrad'] * np.sin(orientation)
 
-    new_variables = {}
-    for var in data.keys():
-        new_variables['/%s/%s' %(group, var)] = varis[var] + (dimensions, ) + (data[var],)
+    data_vars = { var : (dimensions, data[var]) for var in data.keys() }
+    coords = { dim : dsin[dim] for dim in dimensions }
+    attrs = { var : ('standard_name', varis[var]) for var in data.keys() }
 
     # save data in netcdf file using OceanPy's createNetCDF class
-    if output_file is not None:
+    if output_file is None:
+
+        dsout = xr.Dataset(data_vars, coords)
+        # add attributes to xarray dataset
+        for var in data.keys():
+            if var in varis.keys():
+                dsout[var].attrs['standard_name'] = varis[var][0]
+                # TODO: add units to varis and fix unit for orientation variable
+                dsout[var].attrs['units'] = 'ms-1'
+
+        return dsout
+
+    else:
+
+        # structure new variables
+        new_variables = {}
+        for var in data.keys():
+            new_variables['/%s/%s' %(group, var)] = varis[var] + (dimensions, ) + (data[var],)
 
         # create group
-        gw = dsout.dataset.createGroup(group)
+        if group is not None:
+            gw = dsout.dataset.createGroup(group)
 
         # create dimensions and Coordinates
         for name, dimension in dsin.dimensions.items():
@@ -360,26 +408,9 @@ def gradient_wind_from_ssh(input_file, variables=None, dimensions=None,
         # create variables
         dsout.create_vars(new_variables)
 
-    return new_variables if output_file is None else print('New variables %s, stored in group %s, of the output file.'
-          % (', '.join([var for var in data.keys() if var in dsout.dataset[group].variables.keys()]), group))
+        print('New variables %s, stored in group %s, of the output file.'
+              % (', '.join([var for var in data.keys() if var in dsout.dataset[group].variables.keys()]), group))
 
-    # variables = {'Vgrad': Vgrad}
-    # for key, values in variables.items():
-    #     xr_ds.assign(key = (dimensions, values))
-
-
-    # xr_ds_new = xr.Dataset(data_vars={'Vgrad': (dimensions, Vgrad),
-    #                                   'Vgeos': (dimensions, Vgeos),
-    #                                   'orientation': (dimensions, orientation),
-    #                                   'ugrad': (dimensions, ugrad),
-    #                                   'vgrad': (dimensions, vgrad),
-    #                                   'ugeos': (dimensions, ugeos),
-    #                                   'vgeos': (dimensions, vgeos)},
-    #                        coords={dimensions[0]: xr_ds[dimensions[0]],
-    #                                dimensions[1]: xr_ds[dimensions[1]],
-    #                                dimensions[2]: xr_ds[dimensions[2]]})
-
-    # return dsout if output_file is not None else new_variables# xr_ds_new
 
 def qg_from_ssh(input_file, output_file=None, group='quasi-geostrophy',
                 dimensions=('time', 'latitude', 'longitude'), smooth=False, transform=None):
