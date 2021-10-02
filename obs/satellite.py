@@ -202,12 +202,18 @@ def gradient_wind_from_ssh(input_file, variables=('adt', 'ugos', 'vgos'),
     ----------
     input_file : str, Path, file-like, DataArray or Dataset
         Netcdf filename, DataArray or Dataset
-    output_file : str, Path or file-like, optional
-        Netcdf filename and path
     variables : tuple
-        Names of the sea level and geostrophic velocities in the netcdf file or Dataset.
+        Names of the sea level and geostrophic velocities in the netcdf file or Dataset. Sea level required, geostrophic velocities optional.
+    dimensions : tuple
+        Dimension names that apply along the sea level field.
+    transform : str, optional
+        String form of to create the Proj.
+    smooth : False
+        Smooth field after each differentiation.
+    output_file : str, Path or file-like, optional
+        Netcdf filename for output file
     group : str, optional
-        Path to the netCDF4 group in the given file.
+        Group name in netCDF4 output file.
 
     Returns
     -------
@@ -221,7 +227,7 @@ def gradient_wind_from_ssh(input_file, variables=('adt', 'ugos', 'vgos'),
     ...     input_file,
     ...     variables=('adt', 'ugos', 'vgos'),
     ...     dimensions=('time', 'latitude', 'longitude'),
-    ...     transform=pyproj.Proj('+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs'),
+    ...     transform='+proj=utm +zone=55 +south +ellps=WGS84 +datum=WGS84 +units=m +no_defs',
     ...     smooth=True,
     ...     output_file='gw-vel.nc', group='gradient-wind'
     ... )
@@ -268,6 +274,8 @@ def gradient_wind_from_ssh(input_file, variables=('adt', 'ugos', 'vgos'),
 
     # transform polar to cartesian coordinate system
     if transform is not None:
+        if transform == str:
+            transform = pyproj.Proj(transform)
         WGS84 = pyproj.Proj('+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs')
         lnln, ltlt = np.meshgrid(lon.data, lat.data)
         xx, yy = pyproj.transform(WGS84, transform, lnln, ltlt)
