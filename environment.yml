@@ -12,4 +12,7 @@ dependencies:
   - netCDF4
   - scipy
   - gsw
+  - pip:
+    - nbsphinx
+
   # - stsci.convolve
