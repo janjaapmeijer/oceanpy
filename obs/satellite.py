@@ -6,7 +6,9 @@ import xarray as xr
 from netCDF4 import Dataset, num2date
 
 from scipy.interpolate import griddata, UnivariateSpline
-from stsci.convolve import boxcar
+from scipy.ndimage import uniform_filter, gaussian_filter
+
+# from stsci.convolve import boxcar
 from gsw import f, grav
 
 # from . import createNetCDF
@@ -203,13 +205,15 @@ def gradient_wind_from_ssh(input_file, variables=('adt', 'ugos', 'vgos'),
     input_file : str, Path, file-like, DataArray or Dataset
         Netcdf filename, DataArray or Dataset
     variables : tuple
-        Names of the sea level and geostrophic velocities in the netcdf file or Dataset. Sea level required, geostrophic velocities optional.
+        Names of the sea level and geostrophic velocities in the netcdf file or Dataset.
+        Sea level required, geostrophic velocities optional.
     dimensions : tuple
         Dimension names that apply along the sea level field.
     transform : str, optional
         String form of to create the Proj.
-    smooth : False
-        Smooth field after each differentiation.
+    smooth : str or dict, optional
+        Smooth field after each differentiation, with 'boxcar' or 'gaussian' filter.
+        If input is dict, the value in the dict is the size of the window in which the filter is apllied.
     output_file : str, Path or file-like, optional
         Netcdf filename for output file
     group : str, optional
@@ -228,7 +232,7 @@ def gradient_wind_from_ssh(input_file, variables=('adt', 'ugos', 'vgos'),
     ...     variables=('adt', 'ugos', 'vgos'),
     ...     dimensions=('time', 'latitude', 'longitude'),
     ...     transform='+proj=utm +zone=55 +south +ellps=WGS84 +datum=WGS84 +units=m +no_defs',
-    ...     smooth=True,
+    ...     smooth={'boxcar': 3},
     ...     output_file='gw-vel.nc', group='gradient-wind'
     ... )
 
@@ -260,38 +264,43 @@ def gradient_wind_from_ssh(input_file, variables=('adt', 'ugos', 'vgos'),
 
     # load dimensions
     try:
-        lat = dsin[dimensions[1]][:] if dimensions[1] in dsin.dimensions else \
-        print('Dimension %s does not exist in %s' % (dimensions[1], dsin.dimensions))
-        lon = dsin[dimensions[2]][:] if dimensions[2] in dsin.dimensions else \
-        print('Dimension %s does not exist in %s' % (dimensions[2], dsin.dimensions))
+        lat = dsin[dimensions[-2]][:] if dimensions[-2] in dsin.dimensions else \
+        print('Dimension %s does not exist in %s' % (dimensions[-2], dsin.dimensions))
+        lon = dsin[dimensions[-1]][:] if dimensions[-1] in dsin.dimensions else \
+        print('Dimension %s does not exist in %s' % (dimensions[-1], dsin.dimensions))
     except AttributeError:
-        lat = dsin[dimensions[1]][:] if dimensions[1] in dsin.dims else \
-        print('Dimension %s does not exist in %s' % (dimensions[1], dsin.dims))
-        lon = dsin[dimensions[2]][:] if dimensions[2] in dsin.dims else \
-        print('Dimension %s does not exist in %s' % (dimensions[2], dsin.dims))
+        lat = dsin[dimensions[-2]][:] if dimensions[-2] in dsin.coords else \
+        print('Dimension %s does not exist in %s' % (dimensions[-2], dsin.coords))
+        lon = dsin[dimensions[-1]][:] if dimensions[-1] in dsin.coords else \
+        print('Dimension %s does not exist in %s' % (dimensions[-1], dsin.coords))
     else:
-        print('Dimensions %s do not exist.')
+        raise TypeError('Type %s does not have dimensions, try xarray.Datarray \
+        or xarray.Dataset.' %type(dsin))
 
     # transform polar to cartesian coordinate system
-    if transform is not None:
-        if transform == str:
-            transform = pyproj.Proj(transform)
-        WGS84 = pyproj.Proj('+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs')
-        lnln, ltlt = np.meshgrid(lon.data, lat.data)
-        xx, yy = pyproj.transform(WGS84, transform, lnln, ltlt)
+    if transform == 'xy':
+        xx, yy = lat, lon
+        gravity = 9.81
+        fcor = 1e-4
     else:
-        lnln, ltlt = np.meshgrid(lon.data, lat.data)
-        Rearth = 6371.e3 # Earth's radius in m
-        xx = Rearth * np.deg2rad(lnln) * np.cos(np.deg2rad(ltlt))
-        yy = Rearth * np.deg2rad(ltlt)
+        try:
+            if transform == str:
+                transform = pyproj.Proj(transform)
+            WGS84 = pyproj.Proj('EPSG:4326')
+            lnln, ltlt = np.meshgrid(lon.data, lat.data)
+            xx, yy = pyproj.transform(WGS84, transform, lnln, ltlt)
+        except CRSError:
+            lnln, ltlt = np.meshgrid(lon.data, lat.data)
+            Rearth = 6371.e3 # Earth's radius in m
+            xx = Rearth * np.deg2rad(lnln) * np.cos(np.deg2rad(ltlt))
+            yy = Rearth * np.deg2rad(ltlt)
 
-    # calculate coriolis force and gravity on grid
-    shp = adt.shape
-    gravity = grav(ltlt, p=0)
-    fcor = f(ltlt)
+        # calculate coriolis force and gravity on grid
+        gravity = grav(ltlt, p=0)
+        fcor = f(ltlt)
 
     # calculate curvature (and geostrophic velocities)
-    grid_point = (3, 3)
+    shp = adt.shape
     kappa = np.ma.masked_all(shp)
     geostrophy = (ugeos is None) | (vgeos is None)
     if geostrophy:
@@ -300,16 +309,37 @@ def gradient_wind_from_ssh(input_file, variables=('adt', 'ugos', 'vgos'),
 
         detadx = np.gradient(adt[it,])[1] / np.gradient(xx)[1]
         detady = np.gradient(adt[it,])[0] / np.gradient(yy)[0]
-        detadx = boxcar(interp(detadx, xx, yy), grid_point) if smooth else detadx
-        detady = boxcar(interp(detady, xx, yy), grid_point) if smooth else detady
+
+        if smooth:
+            methods = ('boxcar', 'gaussian')
+            if (smooth == dict):
+                method, window = list(smooth.items())[0]
+                if method not in methods:
+                    raise InputError('Only the methods %s are supported.' %methods)
+                if type(window) is not int:
+                    raise InputError('The value in the dict should be a integer, but got %s' %type(window))
+            elif smooth == str:
+                method = smooth if smooth in methods else print('Only the methods %s are supported.' %methods)
+                window = 3
+            else:
+                raise InputError('Input for smooth should be a dict or a str, but got %s' %type(smooth))
+
+            detadx = uniform_filter(detadx, window) if method=='boxcar' else gaussian_filter(detadx)
+            detady = uniform_filter(detady, window) if method=='boxcar' else gaussian_filter(detady)
+        # detadx = boxcar(interp(detadx, xx, yy), grid_point) if smooth else detadx
+        # detady = boxcar(interp(detady, xx, yy), grid_point) if smooth else detady
 
         d2etadxdy = np.gradient(detadx)[0] / np.gradient(yy)[0]
-        d2etadxdy = boxcar(interp(d2etadxdy, xx, yy), grid_point) if smooth else d2etadxdy
-
         d2etadx2 = np.gradient(detadx)[1] / np.gradient(xx)[1]
         d2etady2 = np.gradient(detady)[0] / np.gradient(yy)[0]
-        d2etadx2 = boxcar(interp(d2etadx2, xx, yy), grid_point) if smooth else d2etadx2
-        d2etady2 = boxcar(interp(d2etady2, xx, yy), grid_point) if smooth else d2etady2
+
+        if smooth:
+            d2etadxdy = uniform_filter(d2etadxdy, window) if method=='boxcar' else gaussian_filter(d2etadxdy)
+            d2etadx2 = uniform_filter(d2etadx2, window) if method=='boxcar' else gaussian_filter(d2etadx2)
+            d2etady2 = uniform_filter(d2etady2, window) if method=='boxcar' else gaussian_filter(d2etady2)
+        # d2etadxdy = boxcar(interp(d2etadxdy, xx, yy), grid_point) if smooth else d2etadxdy
+        # d2etadx2 = boxcar(interp(d2etadx2, xx, yy), grid_point) if smooth else d2etadx2
+        # d2etady2 = boxcar(interp(d2etady2, xx, yy), grid_point) if smooth else d2etady2
 
         # curvature
         kappa[it,] = (-(d2etadx2*detady**2) -(d2etady2*detadx**2) + (2*d2etadxdy*detadx*detady)) \
