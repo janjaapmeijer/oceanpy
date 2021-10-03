@@ -42,13 +42,12 @@ extensions = [
     'sphinx.ext.coverage',
     'sphinx.ext.napoleon',
     'nbsphinx',
-    'sphinx_gallery.load_style',
     ]
-
+exclude_patterns = ['**.ipynb_checkpoints']
 napoleon_numpy_docstring = True
 
 # Add any paths that contain templates here, relative to this directory.
-templates_path = ['_templates']
+templates_path = []
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.

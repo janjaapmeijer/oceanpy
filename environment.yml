@@ -12,6 +12,10 @@ dependencies:
   - netCDF4
   - scipy
   - gsw
+  - sphinx
+  # - pandoc
+  # - nbconvert
+  # - ipykernel
   - pip:
     - nbsphinx
 
