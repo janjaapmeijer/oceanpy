@@ -42,6 +42,7 @@ extensions = [
     'sphinx.ext.coverage',
     'sphinx.ext.napoleon',
     'nbsphinx',
+    'sphinx_gallery.load_style',
     ]
 exclude_patterns = ['**.ipynb_checkpoints']
 napoleon_numpy_docstring = True
