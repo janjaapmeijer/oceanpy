@@ -15,6 +15,7 @@ import sys
 sys.path.insert(0, os.path.abspath('../../'))
 sys.path.insert(0, os.path.abspath('../../models'))
 sys.path.insert(0, os.path.abspath('../../obs'))
+sys.path.insert(0, os.path.abspath('../../examples'))
 
 # autodoc_mock_imports = ['stsci.convolve']
 
@@ -39,7 +40,10 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.mathjax',
     'sphinx.ext.coverage',
-    'sphinx.ext.napoleon']
+    'sphinx.ext.napoleon',
+    'nbsphinx',
+    'sphinx_gallery.load_style',
+    ]
 
 napoleon_numpy_docstring = True
 

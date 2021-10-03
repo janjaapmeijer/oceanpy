@@ -13,6 +13,7 @@ Welcome to OceanPy's documentation!
    getting_started
    observations
    models
+   examples
 
 Indices and tables
 ==================
