@@ -1,3 +1,4 @@
 pip
 sphinx
 sphinx_rtd_theme
+nbsphinx
