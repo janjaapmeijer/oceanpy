@@ -16,7 +16,8 @@ dependencies:
   # - pandoc
   # - nbconvert
   # - ipykernel
-  - pip:
-    - nbsphinx
+  - nbsphinx
+  - pandoc
+  - pip
 
   # - stsci.convolve
