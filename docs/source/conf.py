@@ -15,7 +15,7 @@ import sys
 sys.path.insert(0, os.path.abspath('../../'))
 sys.path.insert(0, os.path.abspath('../../models'))
 sys.path.insert(0, os.path.abspath('../../obs'))
-sys.path.insert(0, os.path.abspath('../../examples'))
+# sys.path.insert(0, os.path.abspath('../../examples'))
 
 # autodoc_mock_imports = ['stsci.convolve']
 
@@ -42,7 +42,7 @@ extensions = [
     'sphinx.ext.coverage',
     'sphinx.ext.napoleon',
     'nbsphinx',
-    'sphinx_gallery.load_style',
+    # 'sphinx_gallery.load_style',
     ]
 exclude_patterns = ['**.ipynb_checkpoints']
 napoleon_numpy_docstring = True
