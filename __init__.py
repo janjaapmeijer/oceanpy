@@ -18,7 +18,7 @@
 
 from .models import *
 from .obs import *
-# from .plot import *
+from .plot import *
 from .stats import *
 from .tools import *
 

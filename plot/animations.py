@@ -8,14 +8,18 @@ nc_animation makes an animation of a NetCDF file
 
 import os
 
-from matplotlib import animation
-# from pylab import *
 from netCDF4 import Dataset
-from .colormaps import *
-# from OpenEarthTools.plot.colormap_vaklodingen import *
-from mpl_toolkits.mplot3d import Axes3D
-from matplotlib import cm
+import matplotlib.pyplot as plt
+from matplotlib import animation
+
 from pandas import to_datetime
+
+# from pylab import *
+# from .colormaps import *
+# from OpenEarthTools.plot.colormap_vaklodingen import *
+# from mpl_toolkits.mplot3d import Axes3D
+
+__all__ = ['play2d']
 
 # class ncAnimation:
 #     filename = ''
@@ -77,7 +81,7 @@ def play1D_vars(vararray, t, x, y=None, interval=100, colors=None):
     return anim
 
 
-def play2D(x, y, z=None, u=None, v=None, interval=100, time=None, mask=None, type='pcolor', cmap=plt.cm.jet, cmin=None, cmax=None, bounds=None,
+def play2d(x, y, z=None, u=None, v=None, interval=100, time=None, mask=None, type='pcolor', cmap=plt.cm.jet, cmin=None, cmax=None, bounds=None,
            figsize=(12, 6), save=False, savepath=False):
     fig, ax = plt.subplots(figsize=figsize)
     # fig.tight_layout()
@@ -159,7 +163,7 @@ def play2D(x, y, z=None, u=None, v=None, interval=100, time=None, mask=None, typ
     return anim
 
 
-def play3D(x, y, z, interval=100, cmap=cm.jet, cmin=None, cmax=None, save=False):
+def play3d(x, y, z, interval=100, cmap=plt.cm.jet, cmin=None, cmax=None, save=False):
 
     fig = plt.figure()
     ax = fig.gca(projection='3d')
