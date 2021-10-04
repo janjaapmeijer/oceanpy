@@ -289,6 +289,7 @@ def gradient_wind_from_ssh(input_file, variables=('adt', 'ugos', 'vgos'),
             WGS84 = pyproj.Proj('EPSG:4326')
             lnln, ltlt = np.meshgrid(lon.data, lat.data)
             xx, yy = pyproj.transform(WGS84, transform, lnln, ltlt)
+            print(xx)
         except CRSError:
             lnln, ltlt = np.meshgrid(lon.data, lat.data)
             Rearth = 6371.e3 # Earth's radius in m
@@ -312,17 +313,17 @@ def gradient_wind_from_ssh(input_file, variables=('adt', 'ugos', 'vgos'),
 
         if smooth:
             methods = ('boxcar', 'gaussian')
-            if (smooth == dict):
+            if type(smooth) == dict:
                 method, window = list(smooth.items())[0]
                 if method not in methods:
-                    raise InputError('Only the methods %s are supported.' %methods)
-                if type(window) is not int:
-                    raise InputError('The value in the dict should be a integer, but got %s' %type(window))
-            elif smooth == str:
+                    raise NameError('Only the methods %s are supported.' %methods)
+                if type(window) != int:
+                    raise NameError('The value in the dict should be a integer, but got %s' %type(window))
+            elif type(smooth) == str:
                 method = smooth if smooth in methods else print('Only the methods %s are supported.' %methods)
                 window = 3
             else:
-                raise InputError('Input for smooth should be a dict or a str, but got %s' %type(smooth))
+                raise NameError('Input for smooth should be a dict or a str, but got %s' %type(smooth))
 
             detadx = uniform_filter(detadx, window) if method=='boxcar' else gaussian_filter(detadx)
             detady = uniform_filter(detady, window) if method=='boxcar' else gaussian_filter(detady)
