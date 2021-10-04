@@ -311,6 +311,7 @@ def gradient_wind_from_ssh(input_file, variables=('adt', 'ugos', 'vgos'),
         detady = np.gradient(adt[it,])[0] / np.gradient(yy)[0]
 
         if smooth:
+            print('Smoothing')
             methods = ('boxcar', 'gaussian')
             if type(smooth) == dict:
                 method, window = list(smooth.items())[0]
