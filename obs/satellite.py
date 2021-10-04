@@ -289,7 +289,7 @@ def gradient_wind_from_ssh(input_file, variables=('adt', 'ugos', 'vgos'),
             WGS84 = pyproj.Proj('EPSG:4326')
             lnln, ltlt = np.meshgrid(lon.data, lat.data)
             print(lnln)
-            xx, yy = pyproj.transform(WGS84, transform, x=lnln, y=ltlt)
+            xx, yy = pyproj.transform(WGS84, transform, ltlt, lnln)
             print(xx)
         except CRSError:
             lnln, ltlt = np.meshgrid(lon.data, lat.data)
