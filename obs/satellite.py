@@ -168,12 +168,14 @@ __all__ = ['gradient_wind_from_ssh',
 #     return V, Vg, orientation, ug, vg
 
 varis = {
-    'ugeos': ('surface_geostrophic_eastward_sea_water_velocity', 'f8'),
-    'vgeos': ('surface_geostrophic_northward_sea_water_velocity', 'f8'),
-    'ugrad': ('surface_eastward_sea_water_velocity', 'f8'),
-    'vgrad': ('surface_northward_sea_water_velocity', 'f8'),
-    'Vgeos': ('surface_geostrophic_sea_water_speed', 'f8'),
-    'Vgrad': ('surface_gradient-wind_sea_water_speed', 'f8'),
+    'ug': ('surface_geostrophic_eastward_sea_water_velocity', 'f8'),
+    'vg': ('surface_geostrophic_northward_sea_water_velocity', 'f8'),
+    'ugw': ('surface_eastward_sea_water_velocity', 'f8'),
+    'vgw': ('surface_northward_sea_water_velocity', 'f8'),
+    'uag': ('surface_ageostrophic_eastward_sea_water_velocity', 'f8'),
+    'vag': ('surface_ageostrophic_northward_sea_water_velocity', 'f8'),
+    'Vg': ('surface_geostrophic_sea_water_speed', 'f8'),
+    'Vgw': ('surface_gradient-wind_sea_water_speed', 'f8'),
     'ori': ('sea_water_velocity_to_direction', 'f8'),
     'zeta': ('ocean_relative_vorticity', 'f8'),
     'dzetadt': ('unsteady_relative_vorticity', 'f8'),
@@ -257,10 +259,10 @@ def gradient_wind_from_ssh(input_file, variables=('adt', 'ugos', 'vgos'),
     try:
         adt = dsin[variables[0]][:] if variables[0] in dsin.variables else \
         print('Variable %s does not exist in %s' % (variables[0], dsin.variables))
-        ugeos = dsin[variables[1]][:] if variables[1] in dsin.variables else None
-        vgeos = dsin[variables[2]][:] if variables[2] in dsin.variables else None
+        ug = dsin[variables[1]][:] if variables[1] in dsin.variables else None
+        vg = dsin[variables[2]][:] if variables[2] in dsin.variables else None
     except AttributeError:
-        adt, ugeos, vgeos = dsin, None, None
+        adt, ug, vg = dsin, None, None
 
     # load dimensions
     try:
@@ -302,16 +304,15 @@ def gradient_wind_from_ssh(input_file, variables=('adt', 'ugos', 'vgos'),
     # calculate curvature (and geostrophic velocities)
     shp = adt.shape
     kappa = np.ma.masked_all(shp)
-    geostrophy = (ugeos is None) | (vgeos is None)
+    geostrophy = (ug is None) | (vg is None)
     if geostrophy:
-        ugeos, vgeos = np.ma.masked_all(shp), np.ma.masked_all(shp)
+        ug, vg = np.ma.masked_all(shp), np.ma.masked_all(shp)
     for it in range(dsin[dimensions[0]].size):
 
         detadx = np.gradient(adt[it,])[1] / np.gradient(xx)[1]
         detady = np.gradient(adt[it,])[0] / np.gradient(yy)[0]
 
         if smooth:
-            print('Smoothing')
             methods = ('boxcar', 'gaussian')
             if type(smooth) == dict:
                 method, window = list(smooth.items())[0]
@@ -348,25 +349,25 @@ def gradient_wind_from_ssh(input_file, variables=('adt', 'ugos', 'vgos'),
 
         # gesostrophic velocities
         if geostrophy:
-            ugeos[it,] = -(gravity / fcor) * detady
-            vgeos[it,] = (gravity / fcor) * detadx
+            ug[it,] = -(gravity / fcor) * detady
+            vg[it,] = (gravity / fcor) * detadx
 
         del detadx, detady, d2etadxdy, d2etadx2, d2etady2
 
     # calculate vector orientation angle
     # Note: by definition gradient wind flow is parallel to sea surface height contours
     try:
-        ugeos, vgeos = ugeos.values, vgeos.values
+        ug, vg = ug.values, vg.values
     except AttributeError:
         pass
-    xpos = ugeos < 0
-    ypos = vgeos < 0
-    orientation = np.arctan(vgeos / ugeos)
-    orientation[xpos] = np.arctan(vgeos[xpos] / ugeos[xpos]) + np.pi
-    orientation[xpos & ypos] = np.arctan(vgeos[xpos & ypos] / ugeos[xpos & ypos]) - np.pi
+    xpos = ug < 0
+    ypos = vg < 0
+    orientation = np.arctan(vg / ug)
+    orientation[xpos] = np.arctan(vg[xpos] / ug[xpos]) + np.pi
+    orientation[xpos & ypos] = np.arctan(vg[xpos & ypos] / ug[xpos & ypos]) - np.pi
 
     # calculate geostrophic speed (magnitude)
-    Vgeos = np.sqrt(ugeos**2 + vgeos**2)
+    Vg = np.sqrt(ug**2 + vg**2)
 
     # calculate gradient wind speed (magnitude)
     # according the classification of roots of the gradient wind equation (Holten, 2004)
@@ -374,37 +375,39 @@ def gradient_wind_from_ssh(input_file, variables=('adt', 'ugos', 'vgos'),
         # gravity = np.broadcast_to(gravity, shp)
         fcor = np.broadcast_to(fcor, shp)
     Rcurv = 1 / kappa # Radius of curvature
-    root = np.sqrt(((fcor**2 * Rcurv**2) / 4) + (fcor * Rcurv * Vgeos))
+    root = np.sqrt(((fcor**2 * Rcurv**2) / 4) + (fcor * Rcurv * Vg))
 
-    Vgrad = np.ma.masked_all(shp).flatten()
-    fcor, Vgeos, Rcurv, root = fcor.flatten(), Vgeos.flatten(), Rcurv.flatten(), root.flatten()
-    for i in range(len(Vgrad)):
+    Vgw = np.ma.masked_all(shp).flatten()
+    fcor, Vg, Rcurv, root = fcor.flatten(), Vg.flatten(), Rcurv.flatten(), root.flatten()
+    for i in range(len(Vgw)):
         try:
             if Rcurv[i] == 0:
-                Vgrad[i] = Vgeos.flatten()[i]
+                Vgw[i] = Vg.flatten()[i]
             else:
                 # Northern Hemisphere
                 if fcor[i] >= 0:
-                    if (Rcurv[i] < 0) & (Vgeos[i] > 0):
-                        Vgrad[i] = -(fcor[i] * Rcurv[i] / 2) - root[i]
-                    elif (Rcurv[i] > 0) & (Vgeos[i] > 0):
-                        Vgrad[i] = -(fcor[i] * Rcurv[i] / 2) + root[i]
+                    if (Rcurv[i] < 0) & (Vg[i] > 0):
+                        Vgw[i] = -(fcor[i] * Rcurv[i] / 2) - root[i]
+                    elif (Rcurv[i] > 0) & (Vg[i] > 0):
+                        Vgw[i] = -(fcor[i] * Rcurv[i] / 2) + root[i]
 
                 # Southern Hemisphere
                 elif fcor[i] < 0:
-                    if (Rcurv[i] < 0) & (Vgeos[i] > 0):
-                        Vgrad[i] = -(fcor[i] * Rcurv[i] / 2) + root[i]
-                    elif (Rcurv[i] > 0) & (Vgeos[i] > 0):
-                        Vgrad[i] = -(fcor[i] * Rcurv[i] / 2) - root[i]
+                    if (Rcurv[i] < 0) & (Vg[i] > 0):
+                        Vgw[i] = -(fcor[i] * Rcurv[i] / 2) + root[i]
+                    elif (Rcurv[i] > 0) & (Vg[i] > 0):
+                        Vgw[i] = -(fcor[i] * Rcurv[i] / 2) - root[i]
 
         except TypeError:
-            Vgrad[i] = np.nan
+            Vgw[i] = np.nan
 
     data = {}
-    data['ugeos'], data['vgeos'], data['ori'] = ugeos, vgeos, orientation
-    data['Vgrad'], data['Vgeos'] = Vgrad.reshape(shp), Vgeos.reshape(shp)
-    data['ugrad'] = data['Vgrad'] * np.cos(orientation)
-    data['vgrad'] = data['Vgrad'] * np.sin(orientation)
+    data['ug'], data['vg'], data['ori'] = ug, vg, orientation
+    data['Vgw'], data['Vg'] = Vgw.reshape(shp), Vg.reshape(shp)
+    data['ugw'] = data['Vgw'] * np.cos(orientation)
+    data['vgw'] = data['Vgw'] * np.sin(orientation)
+    data['uag'] = data['ugw'] - data['ug']
+    data['vag'] = data['vgw'] - data['vg']
 
     data_vars = { var : (dimensions, data[var]) for var in data.keys() }
     coords = { dim : dsin[dim] for dim in dimensions }
