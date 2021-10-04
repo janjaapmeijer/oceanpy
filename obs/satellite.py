@@ -288,9 +288,7 @@ def gradient_wind_from_ssh(input_file, variables=('adt', 'ugos', 'vgos'),
                 transform = pyproj.Proj(transform)
             WGS84 = pyproj.Proj('EPSG:4326')
             lnln, ltlt = np.meshgrid(lon.data, lat.data)
-            print(lnln)
             xx, yy = pyproj.transform(WGS84, transform, ltlt, lnln)
-            print(xx)
         except CRSError:
             lnln, ltlt = np.meshgrid(lon.data, lat.data)
             Rearth = 6371.e3 # Earth's radius in m
