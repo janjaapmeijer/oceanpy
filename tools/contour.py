@@ -95,10 +95,10 @@ class Contour(object):
     def make_coordinate(self, da, coord_name=None):
 
         # make contour coordinate along selected contour points
-        try:
-            distance = haversine(da[self.coords[0]], da[self.coords[1]])[0]
-        except:
-            pass
+        # try:
+        distance = haversine(da[self.coords[0]], da[self.coords[1]])[0]
+        # except:
+            # pass
 
         cumdist = np.cumsum(distance)
         cont_coord = np.hstack([[0], cumdist])
