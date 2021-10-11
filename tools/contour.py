@@ -166,10 +166,9 @@ class Contour(object):
                 self.dataset.sel({coords[0]: x, coords[1]: y},
                                            method='nearest'))
         ds = xr.concat(cross_cont_pnt, dim=section_name)
-        print(cross_cont_pnt, ds)
-        ds = self.make_coordinate(ds, section_name)
+        # ds = self.make_coordinate(ds, section_name)
 
-        return ds
+        return lon_st, lat_st, ds
 
 
 
