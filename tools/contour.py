@@ -144,11 +144,11 @@ class Contour(object):
         # orientation = self.bearing2standard(bearing[idx])
         orientation = self.bearing2standard(bearing[idx-1:idx])/2
         orientation = orientation - (np.pi/2)
-        print(orientation)
+
         # transform center point of transect to cartesian coordinate
         WGS84 = pyproj.Proj('EPSG:4326')
         xc_ts, yc_ts = pyproj.transform(WGS84, transform, *np.flip(self.cont_coords[idx]))
-        print(xc_ts, yc_ts)
+
         # calculate remaining stations of transect
         xi_st = np.linspace(xc_ts - (npnts - 1) * spacing / 2,
                             xc_ts + (npnts - 1) * spacing / 2, npnts)
@@ -160,13 +160,16 @@ class Contour(object):
         # transform station coordinates back to latlon
         lat_st, lon_st = pyproj.transform(transform, WGS84, x_st, y_st)
 
+        # TODO; temporary fix for negative longitudes, especially in models
+        if all(self.dataset[coords[0]] < 0):
+            lon_st = lon_st - 360
         cross_cont_pnt = []
         for x, y in zip(lon_st, lat_st):
             cross_cont_pnt.append(
                 self.dataset.sel({coords[0]: x, coords[1]: y},
                                            method='nearest'))
         ds = xr.concat(cross_cont_pnt, dim=section_name)
-        # ds = self.make_coordinate(ds, section_name)
+        ds = self.make_coordinate(ds, section_name)
 
         return lon_st, lat_st, ds
 
