@@ -161,8 +161,9 @@ class Contour(object):
         lat_st, lon_st = pyproj.transform(transform, WGS84, x_st, y_st)
 
         # TODO; temporary fix for negative longitudes, especially in models
+        lat_st = np.array(lat_st)
         if all(self.dataset[coords[0]] < 0):
-            lon_st = lon_st - 360
+            lon_st = np.array(lon_st) - 360
         cross_cont_pnt = []
         for x, y in zip(lon_st, lat_st):
             cross_cont_pnt.append(
