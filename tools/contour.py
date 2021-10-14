@@ -1,7 +1,7 @@
 import numpy as np
 import xarray as xr
 from skimage.measure import find_contours
-from . import haversine, rotatexy, decompose_cartesian_to_natural, bearing_to_standard
+from . import haversine, rotatexy, decompose_cartesian_to_natural
 import pyproj
 
 __all__ = ['Contour']
