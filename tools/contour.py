@@ -92,11 +92,14 @@ class Contour(object):
 
         return cont_coords
 
-    def make_coordinate(self, da, coord_name=None):
+    def make_coordinate(self, da, coord_name=None, coords=None):
+
+        if coords is None:
+            coords = self.coords
 
         # make contour coordinate along selected contour points
         # try:
-        distance = haversine(da[self.coords[0]], da[self.coords[1]])[0]
+        distance = haversine(da[coords[0]], da[coords[1]])[0]
         # except:
             # pass
 
@@ -142,7 +145,7 @@ class Contour(object):
                          for ln, lt in self.cont_coords])
         bearing = haversine(*zip(*self.cont_coords))[1]
         # orientation = self.bearing2standard(bearing[idx])
-        orientation = self.bearing_to_standard(bearing[idx-1:idx])/2
+        orientation = bearing_to_standard(bearing[idx-1:idx])/2
         orientation = orientation - (np.pi/2)
 
         # transform center point of transect to cartesian coordinate
@@ -170,7 +173,7 @@ class Contour(object):
                 self.dataset.sel({coords[0]: x, coords[1]: y},
                                            method='nearest'))
         ds = xr.concat(cross_cont_pnt, dim=section_name)
-        ds = self.make_coordinate(ds, section_name)
+        ds = self.make_coordinate(ds, section_name, coords)
 
         return ds
 
@@ -216,7 +219,7 @@ class Contour(object):
         da = xr.concat(var_cont_pnt, dim=section_name)
 
         # make new coordinate along contour
-        da = self.make_coordinate(da, section_name)
+        da = self.make_coordinate(da, section_name, coords)
         # self.dataset[var_name+'-'+section_name] = da
 
         if decompose and type(var_name) == tuple:
