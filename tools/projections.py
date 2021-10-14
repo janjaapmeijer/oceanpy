@@ -3,7 +3,7 @@
 import pyproj
 import numpy as np
 
-__all__ = ['haversine', 'rotatexy']
+__all__ = ['haversine', 'rotatexy', 'decompose_cartesian_to_natural']
 
 # geodetic defining parameters (wgs84: http://earth-info.nga.mil/GandG/publications/tr8350.2/wgs84fin.pdf)
 #              model               major (m)     flattening
@@ -405,3 +405,27 @@ def vincenty(lon, lat, ellps='WGS-84', iterlim=20):
         # bearing1, bearing2 = (bearing1 + 360) % 360, (bearing2 + 360) % 360
 
     return np.asarray(distance), np.asarray(bearing)
+
+def bearing_to_standard(bearing):
+    return np.deg2rad((90 - bearing) % 360)
+
+def decompose_cartesian_to_natural(u, v, angle, bearing=False):
+
+    if (type(u) == list) or (type(v) == list) or (type(angle) == list):
+        u, v, angle = np.array(u), np.array(v), np.array(angle)
+
+    if bearing:
+        theta = bearing_to_standard(angle)
+    else:
+        theta = angle
+
+    xpos = (theta > np.pi/2) & (theta <= 3*np.pi/2)
+    theta[xpos] = theta[xpos] + np.pi
+
+
+    # print(bearing_to_standard(angle)-theta)
+
+    ut = u * np.cos(theta) + v * np.sin(theta)
+    vn = u * np.sin(theta) + v * np.cos(theta)
+
+    return ut, vn, theta
