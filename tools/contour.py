@@ -1,7 +1,7 @@
 import numpy as np
 import xarray as xr
 from skimage.measure import find_contours
-from . import haversine, rotatexy, decompose_cartesian_to_natural
+from . import haversine, rotatexy, decompose_cartesian_to_natural, bearing_to_standard
 import pyproj
 
 __all__ = ['Contour']
@@ -142,7 +142,7 @@ class Contour(object):
                          for ln, lt in self.cont_coords])
         bearing = haversine(*zip(*self.cont_coords))[1]
         # orientation = self.bearing2standard(bearing[idx])
-        orientation = self.bearing2standard(bearing[idx-1:idx])/2
+        orientation = self.bearing_to_standard(bearing[idx-1:idx])/2
         orientation = orientation - (np.pi/2)
 
         # transform center point of transect to cartesian coordinate
@@ -231,7 +231,7 @@ class Contour(object):
         bearing = haversine(da[self.coords[0]], da[self.coords[1]])[1]
         bearing = np.concatenate((bearing, bearing[-1:]))
         bearing = np.broadcast_to(bearing, da[var_names[0]].T.shape).T
-        
+
         # decompose u,v-velocities along contour
         ut, vn = decompose_cartesian_to_natural(
             da[var_names[0]], da[var_names[1]], bearing, bearing=True)[:-1]
