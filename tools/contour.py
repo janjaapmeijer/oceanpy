@@ -1,7 +1,7 @@
 import numpy as np
 import xarray as xr
 from skimage.measure import find_contours
-from . import haversine, rotatexy
+from . import haversine, rotatexy, decompose_cartesian_to_natural
 import pyproj
 
 __all__ = ['Contour']
@@ -172,7 +172,7 @@ class Contour(object):
         ds = xr.concat(cross_cont_pnt, dim=section_name)
         ds = self.make_coordinate(ds, section_name)
 
-        return lon_st, lat_st, ds
+        return ds
 
 
 
@@ -229,17 +229,13 @@ class Contour(object):
         """ """
 
         bearing = haversine(da[self.coords[0]], da[self.coords[1]])[1]
-
+        bearing = np.concatenate((bearing, bearing[-1:]))
+        bearing = np.broadcast_to(bearing, da[var_names[0]].T.shape).T
+        
         # decompose u,v-velocities along contour
-        theta = self.bearing2standard(bearing)
-        theta = np.broadcast_to(theta, da[var_names[0]][:-1].T.shape).T
+        ut, vn = decompose_cartesian_to_natural(
+            da[var_names[0]], da[var_names[1]], bearing, bearing=True)[:-1]
 
-        da[var_names[0]+'_t'] = da[var_names[0]][:-1] * np.cos(theta)
-        + da[var_names[1]][:-1] * np.sin(theta)
-        da[var_names[1]+'_n'] = da[var_names[0]][:-1] * np.sin(theta)
-        - da[var_names[1]][:-1] * np.sin(theta)
+        da = da.assign({(var_names[0]+'_t') : ut, (var_names[1]+'_n') : vn})
 
         return da
-
-    def bearing2standard(self, bearing):
-        return np.deg2rad((90 - bearing) % 360)
