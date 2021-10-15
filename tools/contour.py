@@ -239,12 +239,13 @@ class Contour(object):
 
         bearing = haversine(da[coords[0]], da[coords[1]])[1]
         bearing = np.concatenate((bearing, bearing[-1:]))
+        bearing[1:] = (bearing[1:] + bearing[:-1]) / 2 # central difference
         bearing = np.broadcast_to(bearing, da[var_names[0]].T.shape).T
 
         # decompose u,v-velocities along contour
         ut, vn = decompose_cartesian_to_natural(
             da[var_names[0]], da[var_names[1]], bearing, bearing=True)[:-1]
 
-        da = da.assign({(var_names[0]+'_t') : ut, (var_names[1]+'_n') : vn})
+        da = da.assign({(var_names[0]+'t') : ut, (var_names[1]+'n') : vn})
 
         return da
