@@ -420,9 +420,9 @@ def decompose_cartesian_to_natural(u, v, angle, bearing=False):
         theta = angle
 
     xpos = (theta > np.pi/2) & (theta <= 3*np.pi/2)
-    ypos = (theta > np.pi) & (theta <= 2*np.pi)
+    # ypos = (theta > np.pi) & (theta <= 2*np.pi)
     theta[xpos] = theta[xpos] + np.pi
-    theta[xpos & ypos] = theta[xpos & ypos] - np.pi
+    # theta[xpos & ypos] = theta[xpos & ypos] - np.pi
 
     # print(bearing_to_standard(angle)-theta)
 
