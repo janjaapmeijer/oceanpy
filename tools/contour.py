@@ -15,7 +15,13 @@ class Contour(object):
             self.dataset = filename_obj
 
         if coords is None:
-            self.coords = list(self.dataset.coords.keys())
+            coords = list(self.dataset.coords.keys())
+            # if len(coords) == 2:
+            #     self.coords_contour = coords
+            # else:
+            #     raise ValueError(
+            #         'Specify which coordinates from %s are the contour coords, with parameter `coords`'
+            #         %coords)
         else:
             self.coords = coords
 
@@ -37,9 +43,9 @@ class Contour(object):
 
         """
 
-        if not all([coord in self.coords for coord in self.dataset[contour_name].coords]):
-            raise ValueError('Contour field dimensions %s do not correspond with coordinates %s',
-                             (self.dataset[contour_name].coords, self.coords))
+        # if not all([coord in self.coords for coord in self.dataset[contour_name].coords]):
+        #     raise ValueError('Contour field dimensions %s do not correspond with coordinates %s',
+        #                      %(self.dataset[contour_name].coords, self.coords))
 
         # find longest contour
         contours = find_contours(self.dataset[contour_name].values, contour_value)
@@ -223,15 +229,15 @@ class Contour(object):
         # self.dataset[var_name+'-'+section_name] = da
 
         if decompose and type(var_name) == tuple:
-            da = self.decompose(da, var_name)
+            da = self.decompose(da, var_name, coords)
 
         return da
 
-    def decompose(self, da, var_names):
+    def decompose(self, da, var_names, coords):
 
         """ """
 
-        bearing = haversine(da[self.coords[0]], da[self.coords[1]])[1]
+        bearing = haversine(da[coords[0]], da[coords[1]])[1]
         bearing = np.concatenate((bearing, bearing[-1:]))
         bearing = np.broadcast_to(bearing, da[var_names[0]].T.shape).T
 
