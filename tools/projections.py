@@ -419,14 +419,40 @@ def decompose_cartesian_to_natural(u, v, angle, bearing=False):
     else:
         theta = angle
 
-    xpos = (theta > np.pi/2) & (theta <= 3*np.pi/2)
-    # ypos = (theta > np.pi) & (theta <= 2*np.pi)
-    theta[xpos] = theta[xpos] + np.pi
-    # theta[xpos & ypos] = theta[xpos & ypos] - np.pi
+    print('theta : ', theta)
+    ori = theta.copy()
 
+    # ut = u*0-1
+    # vn = v*0-1
+
+    # q1 = (theta > 0) & (theta <= np.pi/2)
+    # ut[q1] = u[q1] * np.cos(ori[q1]) + v[q1] * np.sin(ori[q1])
+    # vn[q1] = - u[q1] * np.sin(ori[q1]) + (v[q1] * np.cos(ori[q1]))
+
+    # q4 = (theta > 3*np.pi/2) & (theta <= 2*np.pi)
+    # ori[q4] = theta[q4] - (3*np.pi/2)
+    # ut[q4] = u[q4] * np.cos(ori[q4]) + v[q4] * np.sin(ori[q4])
+    # vn[q4] = u[q4] * np.sin(ori[q4]) + v[q4] * np.cos(ori[q4])
+    # print('ut-decompose : ', ut)
+
+
+    ut = u * np.cos(ori) + v * np.sin(ori)
+    vn = u * np.sin(ori) + v * np.cos(ori)
+
+
+
+
+    # xpos = (theta > np.pi/2) & (theta <= 3*np.pi/2)
+    # ypos = (theta > np.pi) & (theta <= 2*np.pi)
+    # print(ori)
+    # ori[xpos] = theta[xpos] + np.pi
+    # ori[ypos] = theta[ypos]
+    # ori[q4] = np.pi/2 + theta[q4]
     # print(bearing_to_standard(angle)-theta)
 
-    ut = u * np.cos(theta) + v * np.sin(theta)
-    vn = - u * np.sin(theta) + v * np.cos(theta)
 
-    return ut, vn, theta
+
+    # print(u * np.cos(ori), v * np.sin(ori))
+    # print(u * np.sin(ori), v * np.cos(ori))
+
+    return ut, vn, ori
