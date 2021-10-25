@@ -242,11 +242,12 @@ class Contour(object):
 
         bearing = haversine(da[coords[0]], da[coords[1]])[1]
         bearing = np.concatenate((bearing, bearing[-1:]))
+        if cross:
+            bearing = bearing + 90
         # bearing[1:] = (bearing[1:] + bearing[:-1]) / 2 # central difference
         bearing = np.broadcast_to(bearing, da[var_names[0]].T.shape).T
 
-        if cross:
-            bearing += 90
+
 
         # decompose u,v-velocities along contour
         # print('u : ', da[var_names[0]])
