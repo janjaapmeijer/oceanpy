@@ -182,7 +182,7 @@ class Contour(object):
         ds = self.make_coordinate(ds, section_name, coords)
 
         if decompose and type(var_name) == tuple:
-            da = self.decompose_vector(da, var_name, coords, cross=True)
+            ds = self.decompose_vector(ds, var_name, coords, cross=True)
 
         return ds
 
