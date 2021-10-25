@@ -1,7 +1,7 @@
 import numpy as np
 import xarray as xr
 from skimage.measure import find_contours
-from . import haversine, rotatexy, decompose_cartesian_to_natural
+from . import haversine, rotatexy, cartesian_to_natural
 import pyproj
 
 __all__ = ['Contour']
@@ -229,11 +229,11 @@ class Contour(object):
         # self.dataset[var_name+'-'+section_name] = da
 
         if decompose and type(var_name) == tuple:
-            da = self.decompose(da, var_name, coords)
+            da = self.decompose_vector(da, var_name, coords)
 
         return da
 
-    def decompose(self, da, var_names, coords):
+    def decompose_vector(self, da, var_names, coords):
 
         """ """
 
@@ -243,10 +243,10 @@ class Contour(object):
         bearing = np.broadcast_to(bearing, da[var_names[0]].T.shape).T
 
         # decompose u,v-velocities along contour
-        print('u : ', da[var_names[0]])
-        ut, vn = decompose_cartesian_to_natural(
-            da[var_names[0]], da[var_names[1]], bearing, bearing=True)[:-1]
-        print('ut : ', ut)
+        # print('u : ', da[var_names[0]])
+        ut, vn = cartesian_to_natural(
+            da[var_names[0]], da[var_names[1]], bearing, bearing=True)
+        # print('ut : ', ut)
         da = da.assign({(var_names[0]+'t') : ut, (var_names[1]+'n') : vn})
 
         return da

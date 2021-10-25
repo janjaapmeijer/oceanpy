@@ -3,7 +3,7 @@
 import pyproj
 import numpy as np
 
-__all__ = ['haversine', 'rotatexy', 'decompose_cartesian_to_natural']
+__all__ = ['haversine', 'rotatexy', 'cartesian_to_natural']
 
 # geodetic defining parameters (wgs84: http://earth-info.nga.mil/GandG/publications/tr8350.2/wgs84fin.pdf)
 #              model               major (m)     flattening
@@ -296,8 +296,10 @@ def llh2enu(lon, lat, h, lon0=0., lat0=0., h0=0., radian=False):
 ### DISTANCES ###
 def haversine(lon, lat, h=0.):
     '''
-    Great circle distance between longitude and latitude coordinates
-
+    Great circle distance and bearing between longitude and latitude coordinates
+    Bearing is calculated with:
+        θ = atan2(sin(Δlon).cos(lat_2nd),
+                  cos(lat_1st).sin(lat_2nd) − sin(lat_1st).cos(lat_2nd).cos(Δlon))
     Parameters
     ----------
     :param lon: longitude coordinates
@@ -408,51 +410,65 @@ def vincenty(lon, lat, ellps='WGS-84', iterlim=20):
 
 def bearing_to_standard(bearing):
     return np.deg2rad((90 - bearing) % 360)
+# def bearing_to_standard(bearing):
+#     return ((np.pi/2) - bearing)
 
-def decompose_cartesian_to_natural(u, v, angle, bearing=False):
+# def standard_to_bearing(radians):
+#     return (np.rad2deg(radians) + 360) % 360
 
-    if (type(u) == list) or (type(v) == list) or (type(angle) == list):
-        u, v, angle = np.array(u), np.array(v), np.array(angle)
+# https://en.wikipedia.org/wiki/List_of_common_coordinate_transformations#From_Cartesian_coordinates
+# https://en.wikipedia.org/wiki/Polar_coordinate_system#Converting_between_polar_and_Cartesian_coordinates
+def cartesian_to_polar(u, v):
+
+    V = np.sqrt(u**2 + v**2)
+
+    uneg = u < 0
+    vneg = v < 0
+
+    phi = np.arctan(v / u)
+    phi[uneg] = np.arctan(v[uneg] / u[uneg]) + np.pi
+    phi[uneg & vneg] = np.arctan(v[uneg & vneg] / u[uneg & vneg]) - np.pi
+
+    return V, phi
+
+
+# https://en.wikipedia.org/wiki/Rotation_of_axes
+def cartesian_to_natural(u, v, theta, bearing=False):
+
+    # idx = [0, 2, 5, 10, 11, 12, 13, 15, 17, 19, 20, 22, 24, 25, 27, 30, 31]
+
+    # V, phi = cartesian_to_polar(u, v)
+    # phi = ((phi + (2*np.pi)) % (2*np.pi))
 
     if bearing:
-        theta = bearing_to_standard(angle)
-    else:
-        theta = angle
+        theta = bearing_to_standard(theta)
 
-    print('theta : ', theta)
-    ori = theta.copy()
+        # q2 = (rotation > (np.pi/2)) & (rotation <= np.pi)
+        # q3 = (rotation > np.pi) & (rotation <= (3*np.pi/2))
+        # q4 = (rotation > (3*np.pi/2)) & (rotation <= (2*np.pi))
+        #
+        # rotation[q2] = rotation[q2] - np.pi/2
+        # rotation[q3] = rotation[q3] - np.pi
+        # rotation[q4] = rotation[q4] - (3*np.pi/2)
 
-    # ut = u*0-1
-    # vn = v*0-1
+    # phi = ((phi + (2*np.pi)) % (2*np.pi))
 
-    # q1 = (theta > 0) & (theta <= np.pi/2)
-    # ut[q1] = u[q1] * np.cos(ori[q1]) + v[q1] * np.sin(ori[q1])
-    # vn[q1] = - u[q1] * np.sin(ori[q1]) + (v[q1] * np.cos(ori[q1]))
+    # print(rotation[[0,2,5, 10, 11,12, 13,14]])
+    # print(phi[[0,2,5, 10, 11,12, 13,14]].data)
 
-    # q4 = (theta > 3*np.pi/2) & (theta <= 2*np.pi)
-    # ori[q4] = theta[q4] - (3*np.pi/2)
-    # ut[q4] = u[q4] * np.cos(ori[q4]) + v[q4] * np.sin(ori[q4])
-    # vn[q4] = u[q4] * np.sin(ori[q4]) + v[q4] * np.cos(ori[q4])
-    # print('ut-decompose : ', ut)
+    # theta = phi - rotation
 
+    # ut = V * np.cos(theta)
+    # vn = V * np.sin(theta)
+    ut = u * np.cos(theta) + v * np.sin(theta)
+    vn = -u * np.sin(theta) + v * np.cos(theta)
+    # print('angle difference : ', np.rad2deg(theta).data)
+    # print('speed difference : ', (V - np.sqrt(ut**2 + vn**2)).data)
 
-    ut = u * np.cos(ori) + v * np.sin(ori)
-    vn = u * np.sin(ori) + v * np.cos(ori)
+    return ut, vn
 
-
-
-
-    # xpos = (theta > np.pi/2) & (theta <= 3*np.pi/2)
-    # ypos = (theta > np.pi) & (theta <= 2*np.pi)
-    # print(ori)
-    # ori[xpos] = theta[xpos] + np.pi
-    # ori[ypos] = theta[ypos]
-    # ori[q4] = np.pi/2 + theta[q4]
-    # print(bearing_to_standard(angle)-theta)
-
-
-
-    # print(u * np.cos(ori), v * np.sin(ori))
-    # print(u * np.sin(ori), v * np.cos(ori))
-
-    return ut, vn, ori
+# def polar_to_cartesian(V, phi):
+#
+#     u, v = V * np.cos(phi), V * np.sin(phi)
+#
+#     return u, v
