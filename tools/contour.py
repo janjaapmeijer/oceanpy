@@ -128,7 +128,7 @@ class Contour(object):
         self.length = np.sum(haversine(cont_coords[:, 0], cont_coords[:,1])[0])
 
     def cross_section(self, coord_sel, npnts, spacing,
-                      section_name='cross-section', coords=None, transform=None):
+                      section_name='cross-section', var_name=None, coords=None, transform=None, decompose=False):
 
         """
         Vertical section across contour
@@ -180,6 +180,9 @@ class Contour(object):
                                            method='nearest'))
         ds = xr.concat(cross_cont_pnt, dim=section_name)
         ds = self.make_coordinate(ds, section_name, coords)
+
+        if decompose and type(var_name) == tuple:
+            da = self.decompose_vector(da, var_name, coords, cross=True)
 
         return ds
 
@@ -233,7 +236,7 @@ class Contour(object):
 
         return da
 
-    def decompose_vector(self, da, var_names, coords):
+    def decompose_vector(self, da, var_names, coords, cross=False):
 
         """ """
 
@@ -241,6 +244,9 @@ class Contour(object):
         bearing = np.concatenate((bearing, bearing[-1:]))
         # bearing[1:] = (bearing[1:] + bearing[:-1]) / 2 # central difference
         bearing = np.broadcast_to(bearing, da[var_names[0]].T.shape).T
+
+        if cross:
+            bearing += 90
 
         # decompose u,v-velocities along contour
         # print('u : ', da[var_names[0]])
