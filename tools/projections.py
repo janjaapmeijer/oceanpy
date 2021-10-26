@@ -3,7 +3,10 @@
 import pyproj
 import numpy as np
 
-__all__ = ['haversine', 'rotatexy', 'cartesian_to_natural', 'bearing_to_standard']
+__all__ = ['haversine', 'vincenty',
+           'rotatexy',
+           'cartesian_to_natural',
+           'bearing_to_standard']
 
 # geodetic defining parameters (wgs84: http://earth-info.nga.mil/GandG/publications/tr8350.2/wgs84fin.pdf)
 #              model               major (m)     flattening
@@ -330,9 +333,11 @@ def haversine(lon, lat, h=0.):
 
     distance = c * (R + h)
 
-    bearing = np.arctan2(np.sin(dlamb) * np.cos(phi[ip1]),
-                         np.cos(phi[i]) * np.sin(phi[ip1]) - np.sin(phi[i]) * np.cos(phi[ip1]) * np.cos(dlamb))
-    bearing = (np.rad2deg(bearing) + 360) % 360
+    x = np.sin(dlamb) * np.cos(phi[ip1])
+    y = np.cos(phi[i]) * np.sin(phi[ip1]) - np.sin(phi[i]) * np.cos(phi[ip1]) * np.cos(dlamb)
+    theta = np.arctan2(x,y)
+
+    bearing = standard_to_bearing(theta)
 
     return distance, bearing
 
@@ -402,7 +407,7 @@ def vincenty(lon, lat, ellps='WGS-84', iterlim=20):
         # Alpha2 = np.arctan2(cosU1 * sinLambda, -sinU1 * cosU2 + cosU1 * sinU2 * cosLambda)
 
         distance.append(b * A * (Sigma - deltaSigma))
-        bearing.append((np.degrees(Alpha) + 360) % 360)
+        bearing.append(standard_to_bearing(Alpha))
         # bearing1, bearing2 = r2d(Alpha1), r2d(Alpha2)
         # bearing1, bearing2 = (bearing1 + 360) % 360, (bearing2 + 360) % 360
 
@@ -413,8 +418,8 @@ def bearing_to_standard(bearing):
 # def bearing_to_standard(bearing):
 #     return ((np.pi/2) - bearing)
 
-# def standard_to_bearing(radians):
-#     return (np.rad2deg(radians) + 360) % 360
+def standard_to_bearing(theta):
+    return (np.rad2deg(theta) + 360) % 360
 
 # https://en.wikipedia.org/wiki/List_of_common_coordinate_transformations#From_Cartesian_coordinates
 # https://en.wikipedia.org/wiki/Polar_coordinate_system#Converting_between_polar_and_Cartesian_coordinates
@@ -429,46 +434,23 @@ def cartesian_to_polar(u, v):
     phi[uneg] = np.arctan(v[uneg] / u[uneg]) + np.pi
     phi[uneg & vneg] = np.arctan(v[uneg & vneg] / u[uneg & vneg]) - np.pi
 
+    # phi = np.arctan2(v / u)
+
     return V, phi
 
+def polar_to_cartesian(V, phi):
+
+    u, v = V * np.cos(phi), V * np.sin(phi)
+
+    return u, v
 
 # https://en.wikipedia.org/wiki/Rotation_of_axes
 def cartesian_to_natural(u, v, theta, bearing=False):
 
-    # idx = [0, 2, 5, 10, 11, 12, 13, 15, 17, 19, 20, 22, 24, 25, 27, 30, 31]
-
-    # V, phi = cartesian_to_polar(u, v)
-    # phi = ((phi + (2*np.pi)) % (2*np.pi))
-
     if bearing:
         theta = bearing_to_standard(theta)
 
-        # q2 = (rotation > (np.pi/2)) & (rotation <= np.pi)
-        # q3 = (rotation > np.pi) & (rotation <= (3*np.pi/2))
-        # q4 = (rotation > (3*np.pi/2)) & (rotation <= (2*np.pi))
-        #
-        # rotation[q2] = rotation[q2] - np.pi/2
-        # rotation[q3] = rotation[q3] - np.pi
-        # rotation[q4] = rotation[q4] - (3*np.pi/2)
-
-    # phi = ((phi + (2*np.pi)) % (2*np.pi))
-
-    # print(rotation[[0,2,5, 10, 11,12, 13,14]])
-    # print(phi[[0,2,5, 10, 11,12, 13,14]].data)
-
-    # theta = phi - rotation
-
-    # ut = V * np.cos(theta)
-    # vn = V * np.sin(theta)
     ut = u * np.cos(theta) + v * np.sin(theta)
     vn = -u * np.sin(theta) + v * np.cos(theta)
-    # print('angle difference : ', np.rad2deg(theta).data)
-    # print('speed difference : ', (V - np.sqrt(ut**2 + vn**2)).data)
 
     return ut, vn
-
-# def polar_to_cartesian(V, phi):
-#
-#     u, v = V * np.cos(phi), V * np.sin(phi)
-#
-#     return u, v
