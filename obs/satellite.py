@@ -360,14 +360,16 @@ def gradient_wind_from_ssh(input_file, variables=('adt', 'ugos', 'vgos'),
         ug, vg = ug.values, vg.values
     except AttributeError:
         pass
-    xpos = ug < 0
-    ypos = vg < 0
-    orientation = np.arctan(vg / ug)
-    orientation[xpos] = np.arctan(vg[xpos] / ug[xpos]) + np.pi
-    orientation[xpos & ypos] = np.arctan(vg[xpos & ypos] / ug[xpos & ypos]) - np.pi
+    # xpos = ug < 0
+    # ypos = vg < 0
+    # orientation = np.arctan(vg / ug)
+    # orientation[xpos] = np.arctan(vg[xpos] / ug[xpos]) + np.pi
+    # orientation[xpos & ypos] = np.arctan(vg[xpos & ypos] / ug[xpos & ypos]) - np.pi
 
     # calculate geostrophic speed (magnitude)
-    Vg = np.sqrt(ug**2 + vg**2)
+    # Vg = np.sqrt(ug**2 + vg**2)
+
+    Vg, orientation = cartesian_to_polar(ug, vg)
 
     # calculate gradient wind speed (magnitude)
     # according the classification of roots of the gradient wind equation (Holten, 2004)
@@ -404,8 +406,9 @@ def gradient_wind_from_ssh(input_file, variables=('adt', 'ugos', 'vgos'),
     data = {}
     data['ug'], data['vg'], data['ori'] = ug, vg, orientation
     data['Vgw'], data['Vg'] = Vgw.reshape(shp), Vg.reshape(shp)
-    data['ugw'] = data['Vgw'] * np.cos(orientation)
-    data['vgw'] = data['Vgw'] * np.sin(orientation)
+    data['ugw'], data['vgw'] = polar_to_cartesian(data['Vgw'], data['ori'])
+    # data['ugw'] = data['Vgw'] * np.cos(orientation)
+    # data['vgw'] = data['Vgw'] * np.sin(orientation)
     data['uag'] = data['ugw'] - data['ug']
     data['vag'] = data['vgw'] - data['vg']
 
