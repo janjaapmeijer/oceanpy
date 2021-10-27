@@ -13,7 +13,7 @@ from gsw import f, grav
 
 # from . import createNetCDF
 # from . import haversine, rotatexy
-
+from . import cartesian_to_polar, polar_to_cartesian
 __all__ = ['gradient_wind_from_ssh',
            'qg_from_ssh',
            ]
