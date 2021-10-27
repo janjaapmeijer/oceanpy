@@ -4,9 +4,9 @@ import pyproj
 import numpy as np
 
 __all__ = ['haversine', 'vincenty',
-           'rotatexy',
-           'cartesian_to_natural',
-           'bearing_to_standard']
+           'rotatexy', 'bearing_to_standard',
+           'cartesian_to_polar', 'polar_to_cartesian', 'cartesian_to_natural'
+           ]
 
 # geodetic defining parameters (wgs84: http://earth-info.nga.mil/GandG/publications/tr8350.2/wgs84fin.pdf)
 #              model               major (m)     flattening
