@@ -1,6 +1,21 @@
 # OceanPy
 Python package for Oceanography
 
+```
+oceanpy
+├── docs
+├── models
+├── obs
+│   ├── ctd.py
+│   └── satellite.py
+├── plot
+├── stats
+├── tools
+│   ├── contour.py
+│   ├── netcdf.py
+│   └── projections.py
+```
+
 ## Polynomials
 
 \begin{equation}
