@@ -84,11 +84,11 @@ def horizontal_strain(ds, grid):
     return sn_u, ss_u, sigma
 
 
-def horizontal_divergence(ds, grid, vel_names=('u', 'v')):
+def horizontal_divergence(ds, grid, vel_names=('u', 'v'), delta_names=('dx', 'dy')):
 
     # interpolated on t-cells
-    dudx_t = grid.interp(grid.diff(ds[vel_names[0]], 'X', boundary='extend'), 'Y', boundary='extend') / ds.dxt
-    dvdy_t = grid.interp(grid.diff(ds[vel_names[1]], 'Y', boundary='extend'), 'X', boundary='extend') / ds.dyt
+    dudx_t = grid.interp(grid.diff(ds[vel_names[0]], 'X', boundary='extend'), 'Y', boundary='extend') / ds[delta_names[0]]
+    dvdy_t = grid.interp(grid.diff(ds[vel_names[1]], 'Y', boundary='extend'), 'X', boundary='extend') / ds[delta_names[1]]
 
     div_ht = dudx_t + dvdy_t
 
