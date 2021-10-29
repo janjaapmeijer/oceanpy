@@ -1,5 +1,6 @@
 import xgcm
 
+import numpy as np
 from collections import defaultdict
 from xgcm import Grid
 
