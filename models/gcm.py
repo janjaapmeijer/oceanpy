@@ -10,7 +10,7 @@ __all__ = ['define_grid', 'horizontal_strain', 'horizontal_divergence',
 # def define_grid(ds, dims=('X', 'Y', 'Z'),
 #                 distances=('dxt', 'dyt','dzt', 'dxu', 'dyu'),
 #                 areas=('area_u', 'area_t')):
-def define_grid(ds, dims, coords, distances, areas, periodic=False):
+def define_grid(ds, dims, coords, distances, areas, periodic=False, boundary='extend'):
 
     '''
     Define staggered-grid in model
@@ -60,7 +60,7 @@ def define_grid(ds, dims, coords, distances, areas, periodic=False):
     except NameError:
         pass
 
-    return Grid(ds, metrics=metrics, periodic=periodic)
+    return Grid(ds, metrics=metrics, periodic=periodic, boundary=boundary)
 
 # def local_time_derivative():
 
