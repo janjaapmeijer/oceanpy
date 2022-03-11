@@ -63,10 +63,13 @@ class createNetCDF(object):
             # add variable attributes
             if standard_name.split()[-1] in standard_names.keys():
                 var.standard_name = standard_name.split()[-1]
-                if standard_name.split()[-1] == 'time':
+                if standard_name.split()[-1].lower() == 'time':
                     calendar = 'standard'
                     var.units = 'seconds since 1970-01-01 00:00'
-                    data = date2num(data, units=var.units, calendar=calendar)
+                    try:
+                        data = date2num(data, units=var.units, calendar=calendar)
+                    except AttributeError: # else:
+                        pass
                 else:
                     var.units = standard_names[standard_name.split()[-1]][0]
             var.long_name = standard_name
