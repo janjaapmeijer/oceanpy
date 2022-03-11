@@ -81,70 +81,60 @@ def play1D_vars(vararray, t, x, y=None, interval=100, colors=None):
     return anim
 
 
-def play2d(x, y, z=None, u=None, v=None, interval=100, time=None, mask=None, type='pcolor', cmap=plt.cm.jet, cmin=None, cmax=None, bounds=None,
+def play2d(x, y, z=None, z2=None, u=None, v=None, time=None,
+           interval=100, mask=None, anim_type=('pcolor',),
+           cmap=plt.cm.jet, cmin=None, cmax=None, levels=None,
            figsize=(12, 6), save=False, savepath=False):
-    fig, ax = plt.subplots(figsize=figsize)
-    # fig.tight_layout()
-    # ax.set_aspect('equal')
 
-    if type == 'pcolor':
-        cax = ax.pcolormesh(x, y, z[0], cmap=cmap)
-    if type == 'contour':
-        cax = ax.contourf(x, y, z[0], cmap=cmap)
-        ax.contour(x, y, z[0], colors='k')
-    if type == 'quiver':
-        cax = ax.contourf(x, y, z[0], cmap=cmap, zorder=-1)
+    fig, ax = plt.subplots(figsize=figsize)
+
+    if 'pcolor' in anim_type:
+        kw = dict(cmap=cmap, shading='auto')
+        cax = ax.pcolormesh(x, y, z[0], **kw)
+        fig.colorbar(cax, ax=ax)
+
+    if 'contourf' in anim_type:
+        kw = dict(cmap=cmap)
+        cfax = ax.contourf(x, y, z[0], **kw)
+        fig.colorbar(cfax, ax=ax)
+
+    if 'contour' in anim_type:
+        kw_ct = dict(levels=levels, colors='gray')
+        ctax = ax.contour(x, y, z2[0], **kw_ct)
+        ax.clabel(ctax)
+
+    if 'quiver' in anim_type:
         qax = ax.quiver(x, y, u[0], v[0])
 
-    # def init():
-        # ax.clear()
-        # if type == 'contour':
-        #     cax.set_data([], [], [])
-        # if type == 'pcolor':
-        #     cax.set_array(np.array([]))
-        #     cax.set_clim([])
-        # ax.set_title('')
-        # return qax
-
-    # animation function.  This is called sequentially
     def animate(i):
 
-        if type == 'pcolor':
-            cax.set_array(z[i, :-1, :-1].ravel())
+        ax.cla()
+        if 'pcolor' in anim_type:
+            cax = ax.pcolormesh(x, y, z[i], **kw)
             if cmin is None and cmax is None:
-                cax.set_clim([z[i, :-1, :-1].min(), z[i, :-1, :-1].max()])
+                cax.set_clim([z[i,].min(), z[i,].max()])
             else:
                 cax.set_clim([cmin, cmax])
 
-        if type == 'contour':
-            # cax.set_data(x, y, z[i])
-            ax.clear()
-            ax.collections = []
+        if 'contourf' in anim_type:
+            cfax = ax.contourf(x, y, z[i], **kw)
 
-            cax = ax.contourf(x, y, z[i], bounds, cmap=cmap)
-            #             cax.set_clim([cmin, cmax])
+        if 'contour' in anim_type:
+            ctax = ax.contour(x, y, z2[i], **kw_ct)
+            ax.clabel(ctax)
 
-            ct = ax.contour(x, y, z[i], bounds, colors='k')
-            #             if bounds is not None:
-            #                 print(bounds[::step])
-            ax.clabel(ct)
-
-        if type == 'quiver':
-            cax = ax.contourf(x, y, z[i], bounds, cmap=cmap, zorder=-1)
-            qax.set_UVC(u[i], v[i])
+        if 'quiver' in anim_type:
+            qax = ax.quiver(x, y, u[i], v[i])
 
         try:
-            title = ax.set_title(time[i].strftime("%B %d, %Y"))
+            title = ax.set_title(time[i].data.strftime("%B %d, %Y"))
         except AttributeError:
-            title = ax.set_title(to_datetime(time[i]).strftime("%B %d, %Y"))
+            title = ax.set_title(to_datetime(time[i].data).strftime("%B %d, %Y"))
         if mask is not None:
             if mask[i]:
                 plt.setp(title, color='r')
 
-        return cax
-
-    # if not type == 'contour':
-    fig.colorbar(cax, ax=ax)
+        return ax
 
     # call the animator.  blit=True means only re-draw the parts that have changed.
     anim = animation.FuncAnimation(fig, animate, frames=time.size, interval=interval, blit=False)  # , init_func=init
