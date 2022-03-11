@@ -1,4 +1,5 @@
 import os
+from shutil import copyfile
 
 import pyproj
 import numpy as np
@@ -12,6 +13,7 @@ from scipy.ndimage import uniform_filter, gaussian_filter
 from gsw import f, grav
 
 from oceanpy.tools.projections import cartesian_to_polar, polar_to_cartesian
+from oceanpy.tools.netcdf import createNetCDF
 
 __all__ = ['gradient_wind_from_ssh',
            'qg_from_ssh',
@@ -266,17 +268,17 @@ def gradient_wind_from_ssh(input_file, variables=('adt', 'ugos', 'vgos'),
     # load dimensions
     try:
         lat = dsin[dimensions[-2]][:] if dimensions[-2] in dsin.dimensions else \
-        print('Dimension %s does not exist in %s' % (dimensions[-2], dsin.dimensions))
+        print('Dimension %s does not exist in %s' % (dimensions[-2], list(dsin.dimensions.keys())))
         lon = dsin[dimensions[-1]][:] if dimensions[-1] in dsin.dimensions else \
-        print('Dimension %s does not exist in %s' % (dimensions[-1], dsin.dimensions))
+        print('Dimension %s does not exist in %s' % (dimensions[-1], list(dsin.dimensions.keys())))
     except AttributeError:
-        lat = dsin[dimensions[-2]][:] if dimensions[-2] in dsin.coords else \
-        print('Dimension %s does not exist in %s' % (dimensions[-2], dsin.coords))
-        lon = dsin[dimensions[-1]][:] if dimensions[-1] in dsin.coords else \
-        print('Dimension %s does not exist in %s' % (dimensions[-1], dsin.coords))
-    else:
-        raise TypeError('Type %s does not have dimensions, try xarray.Datarray \
-        or xarray.Dataset.' %type(dsin))
+        lat = dsin[dimensions[-2]][:] if dimensions[-2] in dsin.dims else \
+        print('Dimension %s does not exist in %s' % (dimensions[-2], list(dsin.dims.keys())))
+        lon = dsin[dimensions[-1]][:] if dimensions[-1] in dsin.dims else \
+        print('Dimension %s does not exist in %s' % (dimensions[-1], list(dsin.dims.keys())))
+    # else:
+    #     raise TypeError('Type %s does not have dimensions, try xarray.Datarray \
+    #     or xarray.Dataset.' %type(dsin))
 
     # transform polar to cartesian coordinate system
     if transform == 'xy':
@@ -440,12 +442,19 @@ def gradient_wind_from_ssh(input_file, variables=('adt', 'ugos', 'vgos'),
             gw = dsout.dataset.createGroup(group)
 
         # create dimensions and Coordinates
-        for name, dimension in dsin.dimensions.items():
-            gw.createDimension(name, (dimension.size if not dimension.isunlimited() else None))
+        try:
+            dimitems = {}
+            for item in dsin.dimensions.values():
+                dimitems[item.name] = item.size
+            dimitems = dimitems.items()
+        except AttributeError:
+            dimitems = dsin.dims.items()
+        for name, dimension in dimitems:
+            gw.createDimension(name, (dimension)) # dimension.size if not dimension.isunlimited() else None
             if name in dimensions:
-                if name == 'time':
+                try:
                     values = num2date(dsin[name][:], units=dsin[name].units, calendar=dsin[name].calendar)
-                else:
+                except AttributeError:
                     values = dsin[name][:]
                 new_variables['/%s/%s' %(group, name)] = (name, 'f8') + (name, values)
 
@@ -507,12 +516,25 @@ def qg_from_ssh(input_file, output_file=None, group='quasi-geostrophy',
     beta = np.gradient(fcor)[0] / np.gradient(yy)[0]
 
     # calculate ageostrophic components from gradient wind velocities
-    ugrad, vgrad = dsin['ugrad'][:], dsin['vgrad'][:]
-    uag = ugrad - dsin['ugeos'][:]
-    vag = vgrad - dsin['vgeos'][:]
+    ugrad, vgrad = dsin['ugw'][:], dsin['vgw'][:]
+    uag, vag = dsin['uag'][:], dsin['vag'][:]
 
-    smooth = True
-    grid_point = (3, 3)
+    if smooth:
+        methods = ('boxcar', 'gaussian')
+        if type(smooth) == dict:
+            method, window = list(smooth.items())[0]
+            if method not in methods:
+                raise NameError('Only the methods %s are supported.' %methods)
+            if type(window) != int:
+                raise NameError('The value in the dict should be a integer, but got %s' %type(window))
+        elif type(smooth) == str:
+            method = smooth if smooth in methods else print('Only the methods %s are supported.' %methods)
+            window = 3
+        else:
+            raise NameError('Input for smooth should be a dict or a str, but got %s' %type(smooth))
+
+    # smooth = True
+    # grid_point = (3, 3)
 
     zeta = np.ma.masked_all(ugrad.shape)
     divgeos, divag = zeta.copy(), zeta.copy()
@@ -522,14 +544,22 @@ def qg_from_ssh(input_file, output_file=None, group='quasi-geostrophy',
 
         # (gradients of) relative vorticity
         dvdx = np.gradient(vgrad[t,])[1] / np.gradient(xx)[1]
-        dvdx = boxcar(interp(dvdx, lnln, ltlt), grid_point) if smooth else dvdx
         dudy = np.gradient(ugrad[t,])[0] / np.gradient(yy)[0]
-        dudy = boxcar(interp(dudy, lnln, ltlt), grid_point) if smooth else dudy
+        if smooth:
+            dvdx = uniform_filter(dvdx, window) if method=='boxcar' else gaussian_filter(dvdx)
+            dudy = uniform_filter(dudy, window) if method=='boxcar' else gaussian_filter(dudy)
+        # dvdx = boxcar(interp(dvdx, lnln, ltlt), grid_point) if smooth else dvdx
+        # dudy = boxcar(interp(dudy, lnln, ltlt), grid_point) if smooth else dudy
 
         zeta[t,] = dvdx - dudy
 
-        dzetadx = boxcar(np.gradient(zeta[t,])[1] / np.gradient(xx)[1], grid_point)
-        dzetady = boxcar(np.gradient(zeta[t,])[0] / np.gradient(yy)[0], grid_point)
+        dzetadx = np.gradient(zeta[t,])[1] / np.gradient(xx)[1]
+        dzetady = np.gradient(zeta[t,])[0] / np.gradient(yy)[0]
+        if smooth:
+            dzetadx = uniform_filter(dzetadx, window) if method=='boxcar' else gaussian_filter(dzetadx)
+            dzetady = uniform_filter(dzetady, window) if method=='boxcar' else gaussian_filter(dzetady)
+        # dzetadx = boxcar(np.gradient(zeta[t,])[1] / np.gradient(xx)[1], grid_point)
+        # dzetady = boxcar(np.gradient(zeta[t,])[0] / np.gradient(yy)[0], grid_point)
 
         # normal and shear components of strain and Okubo-Weiss parameter
         # dudx = np.gradient(ugrad[t,])[1] / np.gradient(xx)[1]
@@ -548,9 +578,12 @@ def qg_from_ssh(input_file, output_file=None, group='quasi-geostrophy',
 
         # divergence of velocity field
         duagdx = np.gradient(uag[t,])[1] / np.gradient(xx)[1]
-        duagdx = boxcar(interp(duagdx, lnln, ltlt), grid_point) if smooth else duagdx
         dvagdy = np.gradient(vag[t,])[0] / np.gradient(yy)[0]
-        dvagdy = boxcar(interp(dvagdy, lnln, ltlt), grid_point) if smooth else dvagdy
+        if smooth:
+            duagdx = uniform_filter(duagdx, window) if method=='boxcar' else gaussian_filter(duagdx)
+            dvagdy = uniform_filter(dvagdy, window) if method=='boxcar' else gaussian_filter(dvagdy)
+        # duagdx = boxcar(interp(duagdx, lnln, ltlt), grid_point) if smooth else duagdx
+        # dvagdy = boxcar(interp(dvagdy, lnln, ltlt), grid_point) if smooth else dvagdy
 
         divag[t,] = duagdx + dvagdy
 
