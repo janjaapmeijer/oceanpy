@@ -5,17 +5,19 @@ channels:
   # - http://ssb.stsci.edu/astroconda
 
 dependencies:
-  - python=3.6
-  - xarray
+  - python>=3.6
   - numpy
   - pyproj
   - netCDF4
   - scipy
   - gsw
-  - sphinx
-  # - pandoc
+  - xarray
+  - dask
+  - xgcm
+  - scikit-image
   # - nbconvert
   # - ipykernel
+  - sphinx
   - nbsphinx
   - pandoc
   - pip
