@@ -4,7 +4,7 @@ import numpy as np
 from scipy.interpolate import UnivariateSpline
 
 from netCDF4 import Dataset, default_fillvals
-from .tools.netcdf import createNetCDF
+# from . import createNetCDF
 
 from shutil import copyfile
 
@@ -25,6 +25,8 @@ varis = {
     'deltaD': ('dynamic_height_anomaly', 'f8'),
     'gamman': ('sea_water_neutral_density', 'f8')
 }
+
+__all__ = ['CTDprofiles']
 
 class CTDprofiles(object):
 
@@ -109,30 +111,30 @@ class CTDprofiles(object):
             new_variables = {}
             for var in na:
                 if var not in new_variables.keys():
-                    if var is 'SA':
+                    if var == 'SA':
                         new_variables['/%s/%s' %(group, var)] = varis[var] + (dimensions, ) + (SA,)
-                    elif var is 'CT':
+                    elif var == 'CT':
                         new_variables['/%s/%s' %(group, var)] = varis[var] + (dimensions, ) + (CT,)
-                    elif var is 'pt':
+                    elif var == 'pt':
                         if p_ref is None:
                             p_ref = 0
                         new_variables['/%s/%s' %(group, var)] = varis[var] + (dimensions, ) + (pt_from_t(SA, t, p, p_ref),)
-                    elif var is 'deltaD':
+                    elif var == 'deltaD':
                         if p_ref is None:
                             p_ref = 1500
                             raise Warning('Reference pressure is assumed to be 1500 dbar.')
                         new_variables['/%s/%s' %(group, var)] = varis[var] + (dimensions, ) + (np.ma.masked_invalid(geo_strf_dyn_height(SA.data, CT.data, p, p_ref=p_ref, axis=1)),)
-                    elif var is 'g':
+                    elif var == 'g':
                         new_variables['/%s/%s' %(group, var)] = varis[var] + (dimensions, ) + (grav(lat, p),)
-                    elif var is 'z':
+                    elif var == 'z':
                         new_variables['/%s/%s' %(group, var)] = varis[var] + (dimensions, ) + (z_from_p(p, lat),)
-                    elif var is 'g':
+                    elif var == 'g':
                         new_variables['/%s/%s' %(group, var)] = varis[var] + (dimensions, ) + (grav(lat, p),)
-                    elif var is 'sigma0':
+                    elif var == 'sigma0':
                         new_variables['/%s/%s' %(group, var)] = varis[var] + (dimensions, ) + (sigma0(SA, CT),)
-                    elif var is 'spiciness0':
+                    elif var == 'spiciness0':
                         new_variables['/%s/%s' %(group, var)] = varis[var] + (dimensions, ) + (spiciness0(SA, CT),)
-                    elif var is 'gamman':
+                    elif var == 'gamman':
                         print('Switch to python 2 environment to calculate: %s.' %var)
                     else:
                         print('Currently, not supporting function to calculate: %s.' %var)
