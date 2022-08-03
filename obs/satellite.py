@@ -384,7 +384,7 @@ def gradient_wind_from_ssh(input_file, variables=('adt', 'ugos', 'vgos'),
     fcor, Vg, Rcurv, root = fcor.flatten(), Vg.flatten(), Rcurv.flatten(), root.flatten()
     for i in range(len(Vgw)):
         try:
-            if Rcurv[i] == 0:
+            if Rcurv[i] == 0 or not np.isfinite(root[i]): # fall-back to geostrophic velocity
                 Vgw[i] = Vg.flatten()[i]
             else:
                 # Northern Hemisphere
@@ -546,8 +546,8 @@ def qg_from_ssh(input_file, output_file=None, group='quasi-geostrophy',
         dvdx = np.gradient(vgrad[t,])[1] / np.gradient(xx)[1]
         dudy = np.gradient(ugrad[t,])[0] / np.gradient(yy)[0]
         if smooth:
-            dvdx = uniform_filter(dvdx, window) if method=='boxcar' else gaussian_filter(dvdx)
-            dudy = uniform_filter(dudy, window) if method=='boxcar' else gaussian_filter(dudy)
+            dvdx = uniform_filter(np.nan_to_num(dvdx), window) if method=='boxcar' else gaussian_filter(dvdx)
+            dudy = uniform_filter(np.nan_to_num(dudy), window) if method=='boxcar' else gaussian_filter(dudy)
         # dvdx = boxcar(interp(dvdx, lnln, ltlt), grid_point) if smooth else dvdx
         # dudy = boxcar(interp(dudy, lnln, ltlt), grid_point) if smooth else dudy
 
@@ -556,8 +556,8 @@ def qg_from_ssh(input_file, output_file=None, group='quasi-geostrophy',
         dzetadx = np.gradient(zeta[t,])[1] / np.gradient(xx)[1]
         dzetady = np.gradient(zeta[t,])[0] / np.gradient(yy)[0]
         if smooth:
-            dzetadx = uniform_filter(dzetadx, window) if method=='boxcar' else gaussian_filter(dzetadx)
-            dzetady = uniform_filter(dzetady, window) if method=='boxcar' else gaussian_filter(dzetady)
+            dzetadx = uniform_filter(np.nan_to_num(dzetadx), window) if method=='boxcar' else gaussian_filter(dzetadx)
+            dzetady = uniform_filter(np.nan_to_num(dzetady), window) if method=='boxcar' else gaussian_filter(dzetady)
         # dzetadx = boxcar(np.gradient(zeta[t,])[1] / np.gradient(xx)[1], grid_point)
         # dzetady = boxcar(np.gradient(zeta[t,])[0] / np.gradient(yy)[0], grid_point)
 
@@ -580,8 +580,8 @@ def qg_from_ssh(input_file, output_file=None, group='quasi-geostrophy',
         duagdx = np.gradient(uag[t,])[1] / np.gradient(xx)[1]
         dvagdy = np.gradient(vag[t,])[0] / np.gradient(yy)[0]
         if smooth:
-            duagdx = uniform_filter(duagdx, window) if method=='boxcar' else gaussian_filter(duagdx)
-            dvagdy = uniform_filter(dvagdy, window) if method=='boxcar' else gaussian_filter(dvagdy)
+            duagdx = uniform_filter(np.nan_to_num(duagdx), window) if method=='boxcar' else gaussian_filter(duagdx)
+            dvagdy = uniform_filter(np.nan_to_num(dvagdy), window) if method=='boxcar' else gaussian_filter(dvagdy)
         # duagdx = boxcar(interp(duagdx, lnln, ltlt), grid_point) if smooth else duagdx
         # dvagdy = boxcar(interp(dvagdy, lnln, ltlt), grid_point) if smooth else dvagdy
 
