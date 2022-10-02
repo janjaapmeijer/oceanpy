@@ -26,14 +26,15 @@ for model in ellipsoids.keys():
 
 
 ### CONVERSIONS ###
-WGS84 = pyproj.Proj('+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs')
+WGS84 = pyproj.Proj('EPSG:4326')
+# WGS84 = pyproj.Proj('+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs')
 # UTM33 = pyproj.Proj("+proj=utm +zone=33U, +north +ellps=WGS84 +datum=WGS84 +units=m +no_defs")
 UTM33 = pyproj.Proj('EPSG:32633')
-ETRS89 = pyproj.Proj('+proj=laea +lat_0=52 +lon_0=10 +x_0=4321000 +y_0=3210000 +ellps=GRS80 +units=m +no_defs')
+# ETRS89 = pyproj.Proj('+proj=laea +lat_0=52 +lon_0=10 +x_0=4321000 +y_0=3210000 +ellps=GRS80 +units=m +no_defs')
 # SWEREF99 13 30
-SWE99 = pyproj.Proj("+proj=tmerc +lat_0=0 +lon_0=13.5 +k=1 +x_0=150000 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs")
+# SWE99 = pyproj.Proj("+proj=tmerc +lat_0=0 +lon_0=13.5 +k=1 +x_0=150000 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs")
 # SWEREF99 TM
-SWE99TM = pyproj.Proj('+proj=utm +zone=33 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs')
+# SWE99TM = pyproj.Proj('+proj=utm +zone=33 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs')
 # OSM = pyproj.Proj('+ellps=WGS84 +proj=tmerc +lat_0=0 +lon_0=015d48.377m +k=1.0000056 +x_0=1500064.1 +y_0=-668.0')
 
 UTM54 = pyproj.Proj('EPSG:32754')
