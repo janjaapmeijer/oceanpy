@@ -84,6 +84,27 @@ def horizontal_strain(ds, grid):
 
     return sn_u, ss_u, sigma
 
+def strain(ds, grid, vel_names=('u', 'v'), delta_names=('dx', 'dy')):
+
+    return sn, ss
+
+def okubo_weiss_parameter(ds, grid, vel_names=('u', 'v'), delta_names=('dx', 'dy')):
+
+    return
+# normal and shear components of strain and Okubo-Weiss parameter
+        # dudx = np.gradient(ugrad[t,])[1] / np.gradient(xx)[1]
+        # dudx = boxcar(interp(dudx, lnln, ltlt), grid_point) if smooth else dudx
+        # dvdy = np.gradient(vgrad[t,])[0] / np.gradient(yy)[0]
+        # dvdy = boxcar(interp(dvdy, lnln, ltlt), grid_point) if smooth else dvdy
+
+        # Okubo-Weiss parameter
+        # sn = dudx - dvdy
+        # ss = dvdx + dudy
+        #
+        # ow[t,] = sn**2 + ss**2 - zeta[t,]**2
+        # W0 = 0.2 * np.nanstd(ow[t,])
+        # ow_norm[t,] = ow[t,] / W0
+        # ow[t,] = ow[t,] / 4
 
 def horizontal_divergence(ds, grid, vel_names=('u', 'v'), delta_names=('dx', 'dy')):
 
