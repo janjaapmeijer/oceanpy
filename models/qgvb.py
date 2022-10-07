@@ -1,3 +1,8 @@
+import xarray as xr
+
+__all__ = ['relative_vorticity', 'vortex_stretching', 'adv_relative_vorticity',
+           'adv_planetary_vorticity', 'vorticity_tendency', 'bottom_pressure_torque', 'stress_curl']
+
 class QGVorticityBalance(object):
     """docstring for ."""
 
@@ -31,7 +36,7 @@ def vortex_stretching(ds, grid, vel_names=('u', 'v'), delta_names=('dx', 'dy')):
     div_ht = dudx_t + dvdy_t
 
     # Coriolis parameter
-    fcor,_ = xr.broadcast(f(ds.v.yu_ocean), ds.v.xu_ocean)
+    fcor,_ = xr.broadcast(f(ds.yu_ocean), ds.xu_ocean)
 
     # interpolate horizontal divergence to u-cells
     div_hu = grid.interp(grid.interp(div_ht, 'X', boundary='extend'), 'Y', boundary='extend')
