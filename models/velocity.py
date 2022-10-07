@@ -1,4 +1,6 @@
+import numpy as np
 import xarray as xr
+from gsw import f
 
 __all__ = ['geostrophic_velocity', 'ekman_velocity']
 
@@ -40,7 +42,7 @@ def geostrophic_velocity(ds, grid, sea_level='sea_level', stream_func='deltaD', 
 
     return ds
 
-    def ekman_velocity(ds, grid, rho_0=1025, A_z=8e-3, hemisphere='N'):
+def ekman_velocity(ds, grid, rho_0=1025, A_z=8e-3, hemisphere='N'):
 
     # Coriolis parameter
     fcor,_ = xr.broadcast(f(ds.yu_ocean), ds.xu_ocean)
