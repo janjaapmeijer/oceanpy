@@ -3,12 +3,12 @@ import xarray as xr
 __all__ = ['relative_vorticity', 'vortex_stretching', 'adv_relative_vorticity',
            'adv_planetary_vorticity', 'vorticity_tendency', 'bottom_pressure_torque', 'stress_curl']
 
-class QGVorticityBalance(object):
-    """docstring for ."""
-
-    def __init__(self, arg):
-        super(, self).__init__()
-        self.arg = arg
+# class QGVorticityBalance(object):
+#     """docstring for ."""
+#
+#     def __init__(self, arg):
+#         super(, self).__init__()
+#         self.arg = arg
 
 def relative_vorticity(ds, grid, vel_names=('u', 'v'), delta_names=('dx', 'dy')):
 
