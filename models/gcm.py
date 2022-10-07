@@ -4,8 +4,7 @@ import numpy as np
 from collections import defaultdict
 from xgcm import Grid
 
-__all__ = ['define_grid', 'horizontal_strain', 'horizontal_divergence',
-           'relative_vorticity']
+__all__ = ['define_grid', 'horizontal_strain', 'horizontal_divergence']
 
 # def define_grid(ds, dims=('X', 'Y', 'Z'),
 #                 distances=('dxt', 'dyt','dzt', 'dxu', 'dyu'),
