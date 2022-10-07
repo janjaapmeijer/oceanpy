@@ -1,4 +1,5 @@
 import xarray as xr
+from gsw import f
 
 __all__ = ['relative_vorticity', 'vortex_stretching', 'adv_relative_vorticity',
            'adv_planetary_vorticity', 'vorticity_tendency', 'bottom_pressure_torque', 'stress_curl']
