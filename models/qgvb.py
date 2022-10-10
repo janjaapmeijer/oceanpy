@@ -93,7 +93,7 @@ def adv_planetary_vorticity(ds, grid):
     # beta.name = 'beta'
     # beta.attrs['long_name'] = 'Meridional gradient of the Coriolis parameter'
 
-    return betav#, beta
+    return betav, beta
 
 def vorticity_tendency(ds):
 
