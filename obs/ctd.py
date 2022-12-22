@@ -4,7 +4,7 @@ import numpy as np
 from scipy.interpolate import UnivariateSpline
 
 from netCDF4 import Dataset, default_fillvals
-# from . import createNetCDF
+from oceanpy.tools.netcdf import createNetCDF
 
 from shutil import copyfile
 
