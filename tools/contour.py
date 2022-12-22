@@ -161,7 +161,7 @@ class Contour(object):
         idx = np.argmin([haversine([ln, coord_sel[0]], [lt, coord_sel[1]])[0]
                          for ln, lt in self.cont_coords])
         bearing = haversine(*zip(*self.cont_coords))[1]
-        orientation = bearing_to_standard(bearing[idx-1:idx])/2
+        orientation = bearing_to_standard(sum(bearing[idx-1:idx+1])/2)
         orientation = orientation - (np.pi/2) if (np.pi/2) < orientation <= (3*np.pi/2) else orientation + (np.pi/2)
 
         # transform center point of transect to cartesian coordinate
