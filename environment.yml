@@ -15,6 +15,7 @@ dependencies:
   - dask
   - xgcm
   - scikit-image
+  - ffmpeg
   # - nbconvert
   # - ipykernel
   - sphinx
