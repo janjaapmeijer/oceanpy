@@ -9,6 +9,9 @@ authors = [
 repository = "https://github.com/janjaapmeijer/oceanpy"
 documentation = "oceanpy.readthedocs.io"
 
+[options.packages.find]
+include = ["models", "obs", "plot", "stats", "tools"]
+
 [build-system]
 requires = ["setuptools", "numpy", "pyproj", "netCDF4", "scipy", "gsw", "xarray", "dask", "xgcm", "scikit-image", "ffmpeg", "sphinx", "nbsphinx", "pandoc"]
   # - nbconvert
