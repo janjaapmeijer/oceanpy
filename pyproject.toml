@@ -1,0 +1,15 @@
+name = "oceanpy"
+version = "0.1.0"
+description = "Python package for Oceanography"
+license = "Apache-2.0"
+authors = [
+    "Jan Jaap Meijer <janjaapmeijer@gmail.com>",
+]
+
+repository = "https://github.com/janjaapmeijer/oceanpy"
+documentation = "oceanpy.readthedocs.io"
+
+[build-system]
+requires = ["numpy", "pyproj", "netCDF4", "scipy", "gsw", "xarray", "dask", "xgcm", "scikit-image", "ffmpeg", "sphinx", "nbsphinx", "pandoc"]
+  # - nbconvert
+  # - ipykernel
