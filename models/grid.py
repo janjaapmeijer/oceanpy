@@ -1,5 +1,5 @@
 import numpy as np
-from OceanPy.projections import rotatexy
+from oceanpy.projections import rotatexy
 from scipy.interpolate import griddata
 from matplotlib.path import Path
 

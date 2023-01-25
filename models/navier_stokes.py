@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from OceanPy.animations import play1D, play2D, play3D
+from oceanpy.animations import play1D, play2D, play3D
 
 # L = 2
 # nx = 41
