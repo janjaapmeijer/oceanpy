@@ -11,6 +11,6 @@ authors = [{name="Jan Jaap Meijer", email="janjaapmeijer@gmail.com"},]
 where = ["models", "obs", "plot", "stats", "tools"]
 
 [build-system]
-requires = ["setuptools", "numpy", "pyproj", "netCDF4", "scipy", "gsw", "xarray", "dask", "xgcm", "scikit-image", "ffmpeg", "sphinx", "nbsphinx", "pandoc"]
+requires = ["setuptools", "wheel", "numpy", "pyproj", "netCDF4", "scipy", "gsw", "xarray", "dask", "xgcm", "scikit-image", "ffmpeg", "sphinx", "nbsphinx", "pandoc"]
   # - nbconvert
   # - ipykernel
