@@ -8,7 +8,19 @@ try:
 except ImportError:
     from urllib import urlopen
 
-__all__ = ['createNetCDF']
+__all__ = ['createNetCDF', 'retrieve_attrs']
+
+var_attrs = {
+    'SA': 'sea_water_absolute_salinity',
+    'CT': 'sea_water_conservative_temperature',
+    'z': 'height',
+    'pt': 'sea_water_potential_temperature',
+    'sigma0': 'sea_water_sigmat',
+    'spiciness0': 'sea_water_spiciness',
+    'gamman': 'sea_water_neutral_density',
+    'g': 'gravitational_acceleration',
+    'deltaD': 'dynamic_height_anomaly'
+    }
 
 class createNetCDF(object):
 
@@ -84,3 +96,31 @@ class createNetCDF(object):
 
     def close(self):
         self.dataset.close()
+
+# ---------------------------------------------------------------------
+# retrieve meta data from CF-conventions
+# ------------------------------------------------------------------
+def retrieve_attrs(variables):
+
+    # open cf conventions standard names xml file
+    root = ElementTree.parse(
+        urlopen('http://cfconventions.org/Data/cf-standard-names/current/src/cf-standard-name-table.xml'))
+    
+    # check if var_name is in standard names xml file and if so save in dict with according unit and description
+    standard_names = {}
+    for child in root.findall('entry'):
+        standard_names[child.get('id')] = (child.findtext('canonical_units'), child.findtext('description'))
+    
+    attrs = {}
+    for var in variables:
+        attrs[var] = {}
+        standard_name = var_attrs[var]
+        attrs[var]['standard_name'] = standard_name
+        attrs[var]['long_name'] = standard_name
+    
+        # add variable attributes
+        if standard_name in standard_names.keys():
+            attrs[var]['units'] = standard_names[standard_name][0]
+            # attrs[var]['description'] = standard_names[standard_name][1]
+
+    return attrs
