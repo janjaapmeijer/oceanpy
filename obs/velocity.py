@@ -700,7 +700,7 @@ def streamfunction(
 
     if isinstance(p_ref, float):
 
-        dim_names = list(SA.dims.keys())
+        dim_names = SA.dims
         if ('time' in dim_names) & ('pressure' in dim_names) & ('latitude' in dim_names) & ('longitude' in dim_names):
             SA_chunked = SA.chunk({"time": 1, "pressure": -1, "latitude": "auto", "longitude": "auto"})
             CT_chunked = CT.chunk({"time": 1, "pressure": -1, "latitude": "auto", "longitude": "auto"})
