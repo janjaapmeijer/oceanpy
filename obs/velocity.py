@@ -27,6 +27,7 @@ from __future__ import annotations
  
 import numpy as np
 import xarray as xr
+from distributed import get_client
 from oceanpy.tools.netcdf import retrieve_attrs
 
 from gsw import grav, geo_strf_dyn_height, f as coriolis
@@ -638,7 +639,7 @@ def streamfunction(
     ds,
     variables=('CT', 'SA', 'p'),
     coordinates=('longitude', 'latitude', 'pressure'),
-    p_ref=None,
+    p_ref='deepest_common',
 ):
     """
     p_ref modes
@@ -673,15 +674,15 @@ def streamfunction(
     all_finite = finite_mask.all(dim=profile_dim)
     deepest_common = ds[p_name].where(all_finite).max()
 
-    if p_ref is None:
-        p_ref_value = float(deepest_common.values)
-        print(f"p_ref = {p_ref_value} dbar using deepest common pressure")
+    if isinstance(p_ref, str) and p_ref == 'deepest_common':
+        p_ref = float(deepest_common.values)
+        print(f"p_ref = {p_ref} dbar using deepest common pressure")
     elif isinstance(p_ref, str) and p_ref == 'deepest_profile':
-        p_ref_value = None  # signals per-profile branch below
+        print(f"p_ref takes in each profile the deepest pressure available")
     else:
-        p_ref_value = float(p_ref)
-        if p_ref_value <= deepest_common.values:
-            print(f"p_ref = {p_ref_value} <= deepest common pressure = {deepest_common.values}: \u2713")
+        p_ref = float(p_ref)
+        if p_ref <= deepest_common.values:
+            print(f"p_ref = {p_ref} <= deepest common pressure = {deepest_common.values}: \u2713")
         else:
             print(f"Consider setting p_ref to value < {deepest_common.values}")
 
@@ -697,12 +698,37 @@ def streamfunction(
 
     axis = SA.get_axis_num(p_dim)
 
-    if p_ref_value is not None:
-        # single shared p_ref: one vectorized call, as before
-        deltaD = xr.DataArray(
-            geo_strf_dyn_height(SA, CT, p, p_ref_value, axis=axis),
-            dims=SA.dims, coords=SA.coords,
+    if isinstance(p_ref, float):
+        SA_chunked = SA.chunk({"time": 1, "pressure": -1, "latitude": "auto", "longitude": "auto"})
+        CT_chunked = CT.chunk({"time": 1, "pressure": -1, "latitude": "auto", "longitude": "auto"})
+        p_chunked = p.chunk({"time": 1, "pressure": -1, "latitude": "auto", "longitude": "auto"})
+
+        chunk_bytes = np.prod([c[0] for c in SA_chunked.chunks]) * SA.dtype.itemsize
+        print(f"Chunk size (~128MB): {chunk_bytes / 1e6:.1f} MB")
+
+        def _persist(*arrays):
+            try:
+                client = get_client()
+                return [client.persist(a) for a in arrays]
+            except ValueError:
+                return list(arrays)
+
+        SA_persist, CT_persist, p_persist = _persist(SA_chunked, CT_chunked, p_chunked)
+
+        deltaD = xr.apply_ufunc(
+            geo_strf_dyn_height, SA_persist, CT_persist, p_persist, p_ref, kwargs={"axis": axis},
+            input_core_dims=[["pressure"], ["pressure"], ["pressure"], []],
+            output_core_dims=[["pressure"]],
+            dask="parallelized",
+            output_dtypes=[SA.dtype],
         )
+        deltaD = deltaD.compute()
+
+        # single shared p_ref: one vectorized call, as before
+        # deltaD = xr.DataArray(
+        #     geo_strf_dyn_height(SA, CT, p, p_ref, axis=axis),
+        #     dims=SA.dims, coords=SA.coords,
+        # )
     else:
         # per-profile p_ref: loop over profiles
         deepest_per_profile = ds[p_name].where(finite_mask).max(dim=p_dim)
