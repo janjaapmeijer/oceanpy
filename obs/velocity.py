@@ -699,24 +699,26 @@ def streamfunction(
     axis = SA.get_axis_num(p_dim)
 
     if isinstance(p_ref, float):
-        SA_chunked = SA.chunk({"time": 1, "pressure": -1, "latitude": "auto", "longitude": "auto"})
-        CT_chunked = CT.chunk({"time": 1, "pressure": -1, "latitude": "auto", "longitude": "auto"})
-        p_chunked = p.chunk({"time": 1, "pressure": -1, "latitude": "auto", "longitude": "auto"})
 
-        chunk_bytes = np.prod([c[0] for c in SA_chunked.chunks]) * SA.dtype.itemsize
-        print(f"Chunk size (~128MB): {chunk_bytes / 1e6:.1f} MB")
+        if len(satgem.dims) == 4:
+            SA_chunked = SA.chunk({"time": 1, "pressure": -1, "latitude": "auto", "longitude": "auto"})
+            CT_chunked = CT.chunk({"time": 1, "pressure": -1, "latitude": "auto", "longitude": "auto"})
+            p_chunked = p.chunk({"time": 1, "pressure": -1, "latitude": "auto", "longitude": "auto"})
 
-        def _persist(*arrays):
-            try:
-                client = get_client()
-                return [client.persist(a) for a in arrays]
-            except ValueError:
-                return list(arrays)
+            chunk_bytes = np.prod([c[0] for c in SA_chunked.chunks]) * SA.dtype.itemsize
+            print(f"Chunk size (~128MB): {chunk_bytes / 1e6:.1f} MB")
 
-        SA_persist, CT_persist, p_persist = _persist(SA_chunked, CT_chunked, p_chunked)
+            def _persist(*arrays):
+                try:
+                    client = get_client()
+                    return [client.persist(a) for a in arrays]
+                except ValueError:
+                    return list(arrays)
+
+            SA, CT, p = _persist(SA_chunked, CT_chunked, p_chunked)
 
         deltaD = xr.apply_ufunc(
-            geo_strf_dyn_height, SA_persist, CT_persist, p_persist, p_ref, kwargs={"axis": axis},
+            geo_strf_dyn_height, SA, CT, p, p_ref, kwargs={"axis": axis},
             input_core_dims=[["pressure"], ["pressure"], ["pressure"], []],
             output_core_dims=[["pressure"]],
             dask="parallelized",
