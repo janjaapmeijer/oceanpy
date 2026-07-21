@@ -104,7 +104,7 @@ def connect_ssh_to_dynh(
     # relation between SSH and DH (y = ax + b)
     mask = np.isfinite(ssh_ctd) & np.isfinite(D)
     coeffs = np.polyfit(ssh_ctd[mask], D[mask], deg=1)
-    D_ssh = xr.apply_ufunc(np.polyval, coeffs, ssh)
+    D_ssh = xr.apply_ufunc(np.polyval, coeffs, ssh, dask="parallelized", output_dtypes=[ssh.dtype])
     # valid = (D_ssh >= D.min()) & (D_ssh <= D.max())
     # D_ssh = D_ssh.where(valid)
         
@@ -164,7 +164,7 @@ def construct_satgem(
         pass
     
     # find dynamic height values from relation (y=ax+b) with ADT
-    D_ssh = xr.apply_ufunc(np.polyval, coeffs, ssh)
+    D_ssh = xr.apply_ufunc(np.polyval, coeffs, ssh, dask="parallelized", output_dtypes=[ssh.dtype])
     valid = (D_ssh >= D_limits[0]) & (D_ssh <= D_limits[1])
     D_ssh = D_ssh.where(valid)
 
